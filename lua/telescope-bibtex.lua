@@ -23,12 +23,10 @@ local function read_file(file)
 end
 
 local function bibtex_picker(opts)
-  local directory = io.popen('find . -maxdepth 1 -type f')
+  local directory = io.popen('find . -maxdepth 1 -type f -name "*.bib"')
   local references = {}
   for file in directory:lines() do
-    if file:match("%.bib$") then
-      table.insert(references, file:sub(3))
-    end
+    table.insert(references, file:sub(3))
   end
   directory:close()
   opts = opts or {}
