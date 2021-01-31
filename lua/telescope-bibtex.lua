@@ -3,21 +3,17 @@ local pickers = require('telescope.pickers')
 local actions = require('telescope.actions')
 local conf = require('telescope.config').values
 local scan = require('plenary.scandir')
-
-local function file_exists(file)
-  local f = io.open(file, "rb")
-  if f then f:close() end
-  return f ~= nil
-end
+local path = require('plenary.path')
 
 local function read_file(file)
   local entries = {}
-  if not file_exists(file) then return {} end
-  for line in io.lines(file) do
+  local p = path:new(file)
+  if not p:exists() then return {} end
+  for line in p:iter() do
     if line:match("@%w*{") then
       local entry = line:gsub("@%w*{", "")
       entry = entry:sub(1, -2)
-      entries[#entries + 1] = entry
+      table.insert(entries, entry)
     end
   end
   return entries
