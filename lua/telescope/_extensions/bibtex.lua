@@ -12,6 +12,8 @@ local conf = require('telescope.config').values
 local scan = require('plenary.scandir')
 local path = require('plenary.path')
 
+local depth = 1
+
 local function read_file(file)
   local entries = {}
   local contents = {}
@@ -35,7 +37,7 @@ end
 local function bibtex_picker(opts)
   opts = opts or {}
   local results = {}
-  scan.scan_dir('.', { depth = 1, search_pattern = '.*%.bib', on_insert = function(file)
+  scan.scan_dir('.', { depth = depth, search_pattern = '.*%.bib', on_insert = function(file)
     file = file:sub(3)
     local result, content = read_file(file)
     for _, entry in pairs(result) do
@@ -73,7 +75,8 @@ local function bibtex_picker(opts)
 end
 
 return telescope.register_extension {
-  setup = function(_)
+  setup = function(ext_config)
+    depth = ext_config.depth
   end,
   exports = {
     bibtex = bibtex_picker

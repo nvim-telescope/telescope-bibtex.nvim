@@ -2,7 +2,7 @@
 
 Search and paste entries from `*.bib` files with [telescope.nvim](https://github.com/nvim-telescope).
 
-The `*.bib` files must be in the current working directory.
+The `*.bib` files must be under (see [Configuration](#configuration)) the current working directory.
 
 # Requirements
 
@@ -14,7 +14,6 @@ The `*.bib` files must be in the current working directory.
 
 ```
 Plug 'nvim-telescope/telescope-bibtex.nvim'
-
 ```
 
 # Usage
@@ -23,4 +22,21 @@ Plug 'nvim-telescope/telescope-bibtex.nvim'
 lua require"telescope".load_extension("bibtex")
 
 :Telescope bibtex
+```
+
+# Configuration
+
+The default search depth for `*.bib` files is 1.
+To set it to another value, add this to your telescope setup:
+
+```
+require"telescope".setup {
+  ...
+
+  extensions = {
+    bibtex = {
+      depth = 3,
+    },
+  }
+}
 ```
