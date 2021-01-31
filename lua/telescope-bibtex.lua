@@ -1,6 +1,7 @@
 local finders = require('telescope.finders')
 local pickers = require('telescope.pickers')
 local actions = require('telescope.actions')
+local previewers = require('telescope.previewers')
 local conf = require('telescope.config').values
 local scan = require('plenary.scandir')
 local path = require('plenary.path')
@@ -17,9 +18,9 @@ local function read_file(file)
       entry = entry:sub(1, -2)
       current_entry = entry
       table.insert(entries, entry)
-      contents[current_entry] = current_entry .. "\n";
+      contents[current_entry] = { line }
     else
-      contents[current_entry] = contents[current_entry] .. line .. "\n"
+      table.insert(contents[current_entry], line)
     end
   end
   return entries, contents
@@ -27,15 +28,11 @@ end
 
 local function bibtex_picker(opts)
   local results = {}
-  local contents = {}
   scan.scan_dir('.', { depth = 1, search_pattern = '.*%.bib', on_insert = function(file)
     file = file:sub(3)
     local result, content = read_file(file)
     for _, entry in pairs(result) do
-      table.insert(results, entry)
-    end
-    for _, c in pairs(content) do
-      table.insert(contents, c)
+      table.insert(results, { name = entry, content = content[entry] })
     end
   end })
   pickers.new(opts, {
@@ -44,13 +41,16 @@ local function bibtex_picker(opts)
       results = results,
       entry_maker = function(line)
         return {
-          value = line,
-          ordinal = line,
-          display = line
+          value = line.name,
+          ordinal = line.name,
+          display = line.name,
+          preview_command = function(entry, bufnr)
+            vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, results[entry.index].content)
+          end,
         }
       end
     },
-    previewer = nil,
+    previewer = previewers.display_content.new({}),
     sorter = conf.generic_sorter(opts),
     attach_mappings = function(prompt_bufnr)
       actions._goto_file_selection:replace(function(_, _)
