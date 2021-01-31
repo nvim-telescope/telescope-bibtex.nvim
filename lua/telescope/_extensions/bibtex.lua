@@ -1,3 +1,9 @@
+local has_telescope, telescope = pcall(require, "telescope")
+
+if not has_telescope then
+  error("This plugin requires telescope.nvim (https://github.com/nvim-telescope/telescope.nvim)")
+end
+
 local finders = require('telescope.finders')
 local pickers = require('telescope.pickers')
 local actions = require('telescope.actions')
@@ -27,6 +33,7 @@ local function read_file(file)
 end
 
 local function bibtex_picker(opts)
+  opts = opts or {}
   local results = {}
   scan.scan_dir('.', { depth = 1, search_pattern = '.*%.bib', on_insert = function(file)
     file = file:sub(3)
@@ -50,7 +57,7 @@ local function bibtex_picker(opts)
         }
       end
     },
-    previewer = previewers.display_content.new({}),
+    previewer = previewers.display_content.new(opts),
     sorter = conf.generic_sorter(opts),
     attach_mappings = function(prompt_bufnr)
       actions._goto_file_selection:replace(function(_, _)
@@ -58,13 +65,17 @@ local function bibtex_picker(opts)
         actions.close(prompt_bufnr)
         vim.api.nvim_put({entry}, "", true, true)
         -- TODO: prettier insert mode? <16-01-21, @noahares> --
-        vim.api.nvim_feedkeys("A", "n", true)
+        vim.api.nvim_feedkeys("a", "n", true)
       end)
       return true
     end,
   }):find()
 end
 
-return {
-  bibtex_picker = bibtex_picker
+return telescope.register_extension {
+  setup = function(_)
+  end,
+  exports = {
+    bibtex = bibtex_picker
+  },
 }
