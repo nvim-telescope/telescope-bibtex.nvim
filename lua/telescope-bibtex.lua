@@ -7,25 +7,35 @@ local path = require('plenary.path')
 
 local function read_file(file)
   local entries = {}
+  local contents = {}
   local p = path:new(file)
   if not p:exists() then return {} end
+  local current_entry = "";
   for line in p:iter() do
     if line:match("@%w*{") then
       local entry = line:gsub("@%w*{", "")
       entry = entry:sub(1, -2)
+      current_entry = entry
       table.insert(entries, entry)
+      contents[current_entry] = current_entry .. "\n";
+    else
+      contents[current_entry] = contents[current_entry] .. line .. "\n"
     end
   end
-  return entries
+  return entries, contents
 end
 
 local function bibtex_picker(opts)
   local results = {}
+  local contents = {}
   scan.scan_dir('.', { depth = 1, search_pattern = '.*%.bib', on_insert = function(file)
     file = file:sub(3)
-    local result = read_file(file)
+    local result, content = read_file(file)
     for _, entry in pairs(result) do
       table.insert(results, entry)
+    end
+    for _, c in pairs(content) do
+      table.insert(contents, c)
     end
   end })
   pickers.new(opts, {
