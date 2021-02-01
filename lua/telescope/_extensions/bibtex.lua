@@ -15,16 +15,15 @@ local putils = require('telescope.previewers.utils')
 
 local depth = 1
 
-local function end_of_entry(line)
+local function end_of_entry(line, par_mismatch)
   local line_blank = line:gsub("%s", "")
-  local par_mismatch = 0
   for _ in (line_blank):gmatch("{") do
     par_mismatch = par_mismatch + 1
   end
   for _ in (line_blank):gmatch("}") do
     par_mismatch = par_mismatch - 1
   end
-  return line_blank == "}" or par_mismatch < 0
+  return par_mismatch == 0
 end
 
 local function read_file(file)
@@ -34,9 +33,11 @@ local function read_file(file)
   if not p:exists() then return {} end
   local current_entry = ""
   local in_entry = false
+  local par_mismatch = 0
   for line in p:iter() do
     if line:match("@%w*{") then
       in_entry = true
+      par_mismatch = 1
       local entry = line:gsub("@%w*{", "")
       entry = entry:sub(1, -2)
       current_entry = entry
@@ -44,7 +45,7 @@ local function read_file(file)
       contents[current_entry] = { line }
     elseif in_entry and line ~= "" then
       table.insert(contents[current_entry], line)
-      if end_of_entry(line) then
+      if end_of_entry(line, par_mismatch) then
         in_entry = false
       end
     end
