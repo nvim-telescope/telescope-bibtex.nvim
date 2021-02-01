@@ -11,6 +11,7 @@ local previewers = require('telescope.previewers')
 local conf = require('telescope.config').values
 local scan = require('plenary.scandir')
 local path = require('plenary.path')
+local putils = require('telescope.previewers.utils')
 
 local depth = 1
 
@@ -27,7 +28,7 @@ local function read_file(file)
       current_entry = entry
       table.insert(entries, entry)
       contents[current_entry] = { line }
-    else
+    elseif current_entry ~= "" and line ~= "" then
       table.insert(contents[current_entry], line)
     end
   end
@@ -55,6 +56,7 @@ local function bibtex_picker(opts)
           display = line.name,
           preview_command = function(entry, bufnr)
             vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, results[entry.index].content)
+            putils.highlighter(bufnr, 'bib')
           end,
         }
       end
