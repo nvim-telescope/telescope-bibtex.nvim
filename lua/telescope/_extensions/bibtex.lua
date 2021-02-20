@@ -19,6 +19,7 @@ formats['tex'] = "\\cite{%s}"
 formats['md'] = "@%s"
 local fallback_format = 'tex'
 local user_format = fallback_format
+local files = {}
 
 local function end_of_entry(line, par_mismatch)
   local line_blank = line:gsub("%s", "")
@@ -29,6 +30,13 @@ local function end_of_entry(line, par_mismatch)
     par_mismatch = par_mismatch - 1
   end
   return par_mismatch == 0
+end
+
+local function getBibFiles(dir)
+  scan.scan_dir(dir, { depth = depth, search_pattern = '.*%.bib', on_insert = function(file)
+    --file = file:sub(3)
+    table.insert(files, file)
+  end })
 end
 
 local function read_file(file)
@@ -61,13 +69,12 @@ end
 local function bibtex_picker(opts)
   opts = opts or {}
   local results = {}
-  scan.scan_dir('.', { depth = depth, search_pattern = '.*%.bib', on_insert = function(file)
-    file = file:sub(3)
+  for _,file in pairs(files) do
     local result, content = read_file(file)
-    for _, entry in pairs(result) do
+    for _,entry in pairs(result) do
       table.insert(results, { name = entry, content = content[entry] })
     end
-  end })
+  end
   pickers.new(opts, {
     prompt_title = 'Bibtex References',
     finder = finders.new_table {
@@ -110,6 +117,16 @@ return telescope.register_extension {
     if formats[user_format] == nil then
       user_format = fallback_format
     end
+    local global_files = ext_config.global_files or {}
+    for _,file in pairs(global_files) do
+      local p = path:new(file)
+      if p:is_dir() then
+	getBibFiles(file)
+      elseif p:is_file() then
+	table.insert(files, file)
+      end
+    end
+    getBibFiles('.')
   end,
   exports = {
     bibtex = bibtex_picker

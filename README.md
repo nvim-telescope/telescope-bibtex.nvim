@@ -30,8 +30,11 @@ The default search depth for `*.bib` files is 1.
 
 The currently supported formats are `tex` and `md` for `\cite{entry}` and `@entry` respectively.
 
-You may add custom formats: `id` is the format identifier, `cite_marker` the format to apply. \\
-See the example below:
+You may add custom formats: `id` is the format identifier, `cite_marker` the format to apply.
+
+Some people have master `*.bib` files that do not lie within the project tree. Directories and files to retrieve entries from can be set.
+
+See the example below for the config in action:
 
 ```
 require"telescope".setup {
@@ -44,6 +47,7 @@ require"telescope".setup {
         {id = 'myCoolFormat', cite_marker = '#%s#'}
       },
       format = 'myCoolFormat',
+      global_files = { 'path/to/my/bib/file.bib', 'path/to/my/bib/directory' },
     },
   }
 }
