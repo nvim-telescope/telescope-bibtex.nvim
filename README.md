@@ -2,7 +2,7 @@
 
 Search and paste entries from `*.bib` files with [telescope.nvim](https://github.com/nvim-telescope).
 
-The `*.bib` files must be under (see [Configuration](#configuration)) the current working directory.
+The `*.bib` files must be under the current working directory or you need to supply global files/directories (see [Configuration](#configuration)).
 
 # Requirements
 
