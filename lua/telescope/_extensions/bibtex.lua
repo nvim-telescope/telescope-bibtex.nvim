@@ -20,6 +20,8 @@ formats['tex'] = "\\cite{%s}"
 formats['md'] = "@%s"
 local fallback_format = 'tex'
 local user_format = fallback_format
+local user_files = {}
+local files_initialized = false
 local files = {}
 
 local function end_of_entry(line, par_mismatch)
@@ -37,6 +39,18 @@ local function getBibFiles(dir)
   scan.scan_dir(dir, { depth = depth, search_pattern = '.*%.bib', on_insert = function(file)
     table.insert(files, {name = file, mtime = 0, entries = {}})
   end })
+end
+
+local function initFiles()
+  for _,file in pairs(user_files) do
+    local p = path:new(file)
+    if p:is_dir() then
+      getBibFiles(file)
+    elseif p:is_file() then
+      table.insert(files, {name = file, mtime = 0, entries = {} })
+    end
+  end
+  getBibFiles('.')
 end
 
 local function read_file(file)
@@ -68,6 +82,10 @@ end
 
 local function bibtex_picker(opts)
   opts = opts or {}
+  if not files_initialized then
+    initFiles()
+    files_initialized = true
+  end
   local results = {}
   for _,file in pairs(files) do
     local mtime = loop.fs_stat(file.name).mtime.sec
@@ -127,16 +145,7 @@ return telescope.register_extension {
     if formats[user_format] == nil then
       user_format = fallback_format
     end
-    local global_files = ext_config.global_files or {}
-    for _,file in pairs(global_files) do
-      local p = path:new(file)
-      if p:is_dir() then
-	getBibFiles(file)
-      elseif p:is_file() then
-	table.insert(files, {name = file, mtime = 0, entries = {} })
-      end
-    end
-    getBibFiles('.')
+    user_files = ext_config.global_files or {}
   end,
   exports = {
     bibtex = bibtex_picker
