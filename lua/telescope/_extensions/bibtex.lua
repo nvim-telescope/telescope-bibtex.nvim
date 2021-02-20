@@ -12,8 +12,15 @@ local conf = require('telescope.config').values
 local scan = require('plenary.scandir')
 local path = require('plenary.path')
 local putils = require('telescope.previewers.utils')
+local loop = vim.loop
 
 local depth = 1
+local formats = {}
+formats['tex'] = "\\cite{%s}"
+formats['md'] = "@%s"
+local fallback_format = 'tex'
+local user_format = fallback_format
+local files = {}
 
 local function end_of_entry(line, par_mismatch)
   local line_blank = line:gsub("%s", "")
@@ -24,6 +31,12 @@ local function end_of_entry(line, par_mismatch)
     par_mismatch = par_mismatch - 1
   end
   return par_mismatch == 0
+end
+
+local function getBibFiles(dir)
+  scan.scan_dir(dir, { depth = depth, search_pattern = '.*%.bib', on_insert = function(file)
+    table.insert(files, {name = file, mtime = 0, entries = {}})
+  end })
 end
 
 local function read_file(file)
@@ -56,13 +69,22 @@ end
 local function bibtex_picker(opts)
   opts = opts or {}
   local results = {}
-  scan.scan_dir('.', { depth = depth, search_pattern = '.*%.bib', on_insert = function(file)
-    file = file:sub(3)
-    local result, content = read_file(file)
-    for _, entry in pairs(result) do
-      table.insert(results, { name = entry, content = content[entry] })
+  for _,file in pairs(files) do
+    local mtime = loop.fs_stat(file.name).mtime.sec
+    if mtime ~= file.mtime then
+      file.entries = {}
+      local result, content = read_file(file.name)
+      for _,entry in pairs(result) do
+	table.insert(results, { name = entry, content = content[entry] })
+	table.insert(file.entries, { name = entry, content = content[entry] })
+      end
+      file.mtime = mtime
+    else
+      for _,entry in pairs(file.entries) do
+        table.insert(results, entry)
+      end
     end
-  end })
+  end
   pickers.new(opts, {
     prompt_title = 'Bibtex References',
     finder = finders.new_table {
@@ -83,11 +105,11 @@ local function bibtex_picker(opts)
     sorter = conf.generic_sorter(opts),
     attach_mappings = function(prompt_bufnr)
       actions._goto_file_selection:replace(function(_, _)
-        local entry = "\\cite{"..actions.get_selected_entry().value.."}"
+        local entry = string.format(formats[user_format], actions.get_selected_entry().value)
         actions.close(prompt_bufnr)
         vim.api.nvim_put({entry}, "", true, true)
         -- TODO: prettier insert mode? <16-01-21, @noahares> --
-        vim.api.nvim_feedkeys("a", "n", true)
+        vim.api.nvim_feedkeys("ea", "n", true)
       end)
       return true
     end,
@@ -96,7 +118,25 @@ end
 
 return telescope.register_extension {
   setup = function(ext_config)
-    depth = ext_config.depth
+    depth = ext_config.depth or depth
+    local custom_formats = ext_config.custom_formats or {}
+    for _, format in pairs(custom_formats) do
+      formats[format.id] = format.cite_marker
+    end
+    user_format = ext_config.format or fallback_format
+    if formats[user_format] == nil then
+      user_format = fallback_format
+    end
+    local global_files = ext_config.global_files or {}
+    for _,file in pairs(global_files) do
+      local p = path:new(file)
+      if p:is_dir() then
+	getBibFiles(file)
+      elseif p:is_file() then
+	table.insert(files, {name = file, mtime = 0, entries = {} })
+      end
+    end
+    getBibFiles('.')
   end,
   exports = {
     bibtex = bibtex_picker
