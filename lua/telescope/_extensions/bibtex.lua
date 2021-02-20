@@ -12,6 +12,7 @@ local conf = require('telescope.config').values
 local scan = require('plenary.scandir')
 local path = require('plenary.path')
 local putils = require('telescope.previewers.utils')
+local loop = vim.loop
 
 local depth = 1
 local formats = {}
@@ -34,8 +35,7 @@ end
 
 local function getBibFiles(dir)
   scan.scan_dir(dir, { depth = depth, search_pattern = '.*%.bib', on_insert = function(file)
-    --file = file:sub(3)
-    table.insert(files, file)
+    table.insert(files, {name = file, mtime = 0, entries = {}})
   end })
 end
 
@@ -70,9 +70,19 @@ local function bibtex_picker(opts)
   opts = opts or {}
   local results = {}
   for _,file in pairs(files) do
-    local result, content = read_file(file)
-    for _,entry in pairs(result) do
-      table.insert(results, { name = entry, content = content[entry] })
+    local mtime = loop.fs_stat(file.name).mtime.sec
+    if mtime ~= file.mtime then
+      file.entries = {}
+      local result, content = read_file(file.name)
+      for _,entry in pairs(result) do
+	table.insert(results, { name = entry, content = content[entry] })
+	table.insert(file.entries, { name = entry, content = content[entry] })
+      end
+      file.mtime = mtime
+    else
+      for _,entry in pairs(file.entries) do
+        table.insert(results, entry)
+      end
     end
   end
   pickers.new(opts, {
@@ -123,7 +133,7 @@ return telescope.register_extension {
       if p:is_dir() then
 	getBibFiles(file)
       elseif p:is_file() then
-	table.insert(files, file)
+	table.insert(files, {name = file, mtime = 0, entries = {} })
       end
     end
     getBibFiles('.')
