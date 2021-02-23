@@ -122,7 +122,7 @@ local function bibtex_picker(opts)
     previewer = previewers.display_content.new(opts),
     sorter = conf.generic_sorter(opts),
     attach_mappings = function(prompt_bufnr)
-      actions._goto_file_selection:replace(function(_, _)
+      actions.select_default:replace(function(_, _)
         local entry = string.format(formats[user_format], actions.get_selected_entry().value)
         actions.close(prompt_bufnr)
         vim.api.nvim_put({entry}, "", true, true)
