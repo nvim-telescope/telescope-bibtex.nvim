@@ -7,6 +7,7 @@ end
 local finders = require('telescope.finders')
 local pickers = require('telescope.pickers')
 local actions = require('telescope.actions')
+local action_state = require('telescope.actions.state')
 local previewers = require('telescope.previewers')
 local conf = require('telescope.config').values
 local scan = require('plenary.scandir')
@@ -123,7 +124,7 @@ local function bibtex_picker(opts)
     sorter = conf.generic_sorter(opts),
     attach_mappings = function(prompt_bufnr)
       actions.select_default:replace(function(_, _)
-        local entry = string.format(formats[user_format], actions.get_selected_entry().value)
+        local entry = string.format(formats[user_format], action_state.get_selected_entry().value)
         actions.close(prompt_bufnr)
         vim.api.nvim_put({entry}, "", true, true)
         -- TODO: prettier insert mode? <16-01-21, @noahares> --
