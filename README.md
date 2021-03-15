@@ -48,6 +48,7 @@ require"telescope".setup {
       },
       format = 'myCoolFormat',
       global_files = { 'path/to/my/bib/file.bib', 'path/to/my/bib/directory' },
+      search_keys = { 'author', 'publisher' },
     },
   }
 }

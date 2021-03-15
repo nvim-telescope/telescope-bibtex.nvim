@@ -24,6 +24,16 @@ local user_format = fallback_format
 local user_files = {}
 local files_initialized = false
 local files = {}
+local search_keys = {}
+
+local function table_contains(table, element)
+  for _, value in pairs(table) do
+    if value == element then
+      return true
+    end
+  end
+  return false
+end
 
 local function end_of_entry(line, par_mismatch)
   local line_blank = line:gsub("%s", "")
@@ -57,6 +67,10 @@ end
 local function read_file(file)
   local entries = {}
   local contents = {}
+  local search_relevants = {}
+  local sub = {}
+  sub["{"] = ""
+  sub["}"] = ""
   local p = path:new(file)
   if not p:exists() then return {} end
   local current_entry = ""
@@ -71,14 +85,23 @@ local function read_file(file)
       current_entry = entry
       table.insert(entries, entry)
       contents[current_entry] = { line }
+      search_relevants[current_entry] = { current_entry }
     elseif in_entry and line ~= "" then
       table.insert(contents[current_entry], line)
+      local split = line:find("=")
+      if split then
+        local search_key = vim.trim(line:sub(1, split - 1))
+        if table_contains(search_keys, search_key) then
+          local relevant = line:sub(split + 1):gsub(".", sub)
+          table.insert(search_relevants[current_entry], relevant)
+        end
+      end
       if end_of_entry(line, par_mismatch) then
         in_entry = false
       end
     end
   end
-  return entries, contents
+  return entries, contents, search_relevants
 end
 
 local function bibtex_picker(opts)
@@ -92,10 +115,10 @@ local function bibtex_picker(opts)
     local mtime = loop.fs_stat(file.name).mtime.sec
     if mtime ~= file.mtime then
       file.entries = {}
-      local result, content = read_file(file.name)
+      local result, content, search_relevants = read_file(file.name)
       for _,entry in pairs(result) do
-	table.insert(results, { name = entry, content = content[entry] })
-	table.insert(file.entries, { name = entry, content = content[entry] })
+	table.insert(results, { name = entry, content = content[entry], search_keys = search_relevants[entry] })
+	table.insert(file.entries, { name = entry, content = content[entry], search_keys = search_relevants[entry] })
       end
       file.mtime = mtime
     else
@@ -110,9 +133,10 @@ local function bibtex_picker(opts)
       results = results,
       entry_maker = function(line)
         return {
-          value = line.name,
-          ordinal = line.name,
+          value = table.concat(line.search_keys) or line.name,
+          ordinal = table.concat(line.search_keys) or line.name,
           display = line.name,
+          id = line.name,
           preview_command = function(entry, bufnr)
             vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, results[entry.index].content)
             putils.highlighter(bufnr, 'bib')
@@ -124,7 +148,7 @@ local function bibtex_picker(opts)
     sorter = conf.generic_sorter(opts),
     attach_mappings = function(prompt_bufnr)
       actions.select_default:replace(function(_, _)
-        local entry = string.format(formats[user_format], action_state.get_selected_entry().value)
+        local entry = string.format(formats[user_format], action_state.get_selected_entry().id)
         actions.close(prompt_bufnr)
         vim.api.nvim_put({entry}, "", true, true)
         -- TODO: prettier insert mode? <16-01-21, @noahares> --
@@ -147,6 +171,7 @@ return telescope.register_extension {
       user_format = fallback_format
     end
     user_files = ext_config.global_files or {}
+    search_keys = ext_config.search_keys or {}
   end,
   exports = {
     bibtex = bibtex_picker
