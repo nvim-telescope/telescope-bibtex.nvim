@@ -24,7 +24,7 @@ local user_format = fallback_format
 local user_files = {}
 local files_initialized = false
 local files = {}
-local search_keys = {}
+local search_keys = { 'author', 'year', 'title' }
 
 local function table_contains(table, element)
   for _, value in pairs(table) do
@@ -85,14 +85,21 @@ local function read_file(file)
       current_entry = entry
       table.insert(entries, entry)
       contents[current_entry] = { line }
-      search_relevants[current_entry] = { current_entry }
+      if table_contains(search_keys, [[label]]) then
+        search_relevants[current_entry] = { current_entry }
+      else
+        search_relevants[current_entry] = { }
+      end
     elseif in_entry and line ~= "" then
       table.insert(contents[current_entry], line)
       local split = line:find("=")
       if split then
         local search_key = vim.trim(line:sub(1, split - 1))
         if table_contains(search_keys, search_key) then
-          local relevant = line:sub(split + 1):gsub(".", sub)
+          local relevant = vim.trim(line:sub(split + 1):gsub(".", sub))
+          if relevant:find(',', -1) then
+            relevant = relevant:sub(1, -2)
+          end
           table.insert(search_relevants[current_entry], relevant)
         end
       end
@@ -102,6 +109,22 @@ local function read_file(file)
     end
   end
   return entries, contents, search_relevants
+end
+
+local function formatDisplay(entry)
+  local display_string = ''
+  for _, val in pairs(entry) do
+    if tonumber(val) ~= nil then
+      display_string = display_string .. ' ' .. '(' .. val .. ')'
+    else
+      display_string = display_string .. ', ' .. val
+    end
+  end
+  if display_string == '' then
+    return nil
+  else
+    return display_string:sub(2)
+  end
 end
 
 local function bibtex_picker(opts)
@@ -135,7 +158,7 @@ local function bibtex_picker(opts)
         return {
           value = table.concat(line.search_keys) or line.name,
           ordinal = table.concat(line.search_keys) or line.name,
-          display = line.name,
+          display = formatDisplay(line.search_keys) or line.name,
           id = line.name,
           preview_command = function(entry, bufnr)
             vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, results[entry.index].content)
@@ -171,7 +194,7 @@ return telescope.register_extension {
       user_format = fallback_format
     end
     user_files = ext_config.global_files or {}
-    search_keys = ext_config.search_keys or {}
+    search_keys = ext_config.search_keys or search_keys
   end,
   exports = {
     bibtex = bibtex_picker
