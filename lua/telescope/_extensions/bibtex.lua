@@ -85,10 +85,9 @@ local function read_file(file)
       current_entry = entry
       table.insert(entries, entry)
       contents[current_entry] = { line }
+      search_relevants[current_entry] = { }
       if table_contains(search_keys, [[label]]) then
-        search_relevants[current_entry] = { current_entry }
-      else
-        search_relevants[current_entry] = { }
+        search_relevants[current_entry]['label'] = current_entry
       end
     elseif in_entry and line ~= "" then
       table.insert(contents[current_entry], line)
@@ -100,7 +99,7 @@ local function read_file(file)
           if relevant:find(',', -1) then
             relevant = relevant:sub(1, -2)
           end
-          table.insert(search_relevants[current_entry], relevant)
+          search_relevants[current_entry][search_key] = relevant
         end
       end
       if end_of_entry(line, par_mismatch) then
@@ -113,18 +112,17 @@ end
 
 local function formatDisplay(entry)
   local display_string = ''
-  for _, val in pairs(entry) do
-    if tonumber(val) ~= nil then
-      display_string = display_string .. ' ' .. '(' .. val .. ')'
-    else
-      display_string = display_string .. ', ' .. val
+  local search_string = ''
+  for _, val in pairs(search_keys) do
+    if tonumber(entry[val]) ~= nil then
+      display_string = display_string .. ' ' .. '(' .. entry[val] .. ')'
+      search_string = search_string .. ' ' .. entry[val]
+    elseif entry[val] ~= nil then
+      display_string = display_string .. ', ' .. entry[val]
+      search_string = search_string .. ' ' .. entry[val]
     end
   end
-  if display_string == '' then
-    return nil
-  else
-    return display_string:sub(2)
-  end
+  return display_string:sub(2), search_string:sub(2)
 end
 
 local function bibtex_picker(opts)
@@ -155,10 +153,17 @@ local function bibtex_picker(opts)
     finder = finders.new_table {
       results = results,
       entry_maker = function(line)
+        display_string, search_string = formatDisplay(line.search_keys)
+        if display_string == '' then
+          display_string = line.name
+        end
+        if search_string == '' then
+          search_string = line.name
+        end
         return {
-          value = table.concat(line.search_keys) or line.name,
-          ordinal = table.concat(line.search_keys) or line.name,
-          display = formatDisplay(line.search_keys) or line.name,
+          value = search_string,
+          ordinal = search_string,
+          display = display_string,
           id = line.name,
           preview_command = function(entry, bufnr)
             vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, results[entry.index].content)
