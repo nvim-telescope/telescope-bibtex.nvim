@@ -65,49 +65,79 @@ local function initFiles()
 end
 
 local function read_file(file)
-  local entries = {}
+  local labels = {}
   local contents = {}
   local search_relevants = {}
-  local sub = {}
-  sub["{"] = ""
-  sub["}"] = ""
   local p = path:new(file)
   if not p:exists() then return {} end
-  local current_entry = ""
-  local in_entry = false
-  local par_mismatch = 0
-  for line in p:iter() do
-    if line:match("@%w*{") then
-      in_entry = true
-      par_mismatch = 1
-      local entry = line:gsub("@%w*{", "")
-      entry = entry:sub(1, -2)
-      current_entry = entry
-      table.insert(entries, entry)
-      contents[current_entry] = { line }
-      search_relevants[current_entry] = { }
-      if table_contains(search_keys, [[label]]) then
-        search_relevants[current_entry]['label'] = current_entry
-      end
-    elseif in_entry and line ~= "" then
-      table.insert(contents[current_entry], line)
-      local split = line:find("=")
-      if split then
-        local search_key = vim.trim(line:sub(1, split - 1))
-        if table_contains(search_keys, search_key) then
-          local relevant = vim.trim(line:sub(split + 1):gsub(".", sub))
-          if relevant:find(',', -1) then
-            relevant = relevant:sub(1, -2)
-          end
-          search_relevants[current_entry][search_key] = relevant
-        end
-      end
-      if end_of_entry(line, par_mismatch) then
-        in_entry = false
+  local data = p:read()
+  data = data:gsub("\r", "")
+  local entries = {}
+  while data ~= '' do
+    local entry = data:match('@[%w_]*%b{}')
+    table.insert(entries, entry)
+    data = data:sub(#entry + 2)
+  end
+  for _,entry in pairs(entries) do
+    local label = entry:match("{[%w_]*,\n")
+    label = label:gsub("\n",""):sub(2, -2)
+    local content = vim.split(entry, "\n")
+    table.insert(labels, label)
+    contents[label] = content
+    if table_contains(search_keys, [[label]]) then
+      search_relevants[label]['label'] = label
+    end
+    search_relevants[label] = {}
+    for _,key in pairs(search_keys) do
+      local s = entry:match(key .. '=%b{}')
+      if s ~= nil then
+        s = s:sub(#key + 3, -2)
+        s = s:gsub("\n", "")
+        search_relevants[label][key] = vim.trim(s)
       end
     end
   end
-  return entries, contents, search_relevants
+  return labels, contents, search_relevants
+
+
+  --for line in p:iter() do
+    --if line:match("@%w*{") then
+      --in_entry = true
+      --par_mismatch = 1
+      --local entry = line:gsub("@%w*{", "")
+      --entry = entry:sub(1, -2)
+      --current_entry = entry
+      --table.insert(entries, entry)
+      --contents[current_entry] = { line }
+      --search_relevants[current_entry] = { }
+      --if table_contains(search_keys, [[label]]) then
+        --search_relevants[current_entry]['label'] = current_entry
+      --end
+    --elseif in_entry and line ~= "" then
+      --table.insert(contents[current_entry], line)
+      --if multiline_val then
+        --search_relevants[current_entry][search_key] = search_relevants[current_entry][search_key] .. " " .. vim.trim(line)
+        --multiline_val = false
+      --end
+      --local split = line:find("=")
+      --if split then
+        --search_key = vim.trim(line:sub(1, split - 1))
+        --if table_contains(search_keys, search_key) then
+          --if not end_of_entry(line, 0) then
+            --multiline_val = true
+          --end
+          --local relevant = vim.trim(line:sub(split + 1):gsub(".", sub))
+          --if relevant:find(',', -1) then
+            --relevant = relevant:sub(1, -2)
+          --end
+          --search_relevants[current_entry][search_key] = relevant
+        --end
+      --end
+      --if end_of_entry(line, par_mismatch) then
+        --in_entry = false
+      --end
+    --end
+  --end
 end
 
 local function formatDisplay(entry)
@@ -122,7 +152,7 @@ local function formatDisplay(entry)
       search_string = search_string .. ' ' .. entry[val]
     end
   end
-  return display_string:sub(2), search_string:sub(2)
+  return vim.trim(display_string:sub(2)), search_string:sub(2)
 end
 
 local function bibtex_picker(opts)
@@ -153,7 +183,7 @@ local function bibtex_picker(opts)
     finder = finders.new_table {
       results = results,
       entry_maker = function(line)
-        display_string, search_string = formatDisplay(line.search_keys)
+        local display_string, search_string = formatDisplay(line.search_keys)
         if display_string == '' then
           display_string = line.name
         end
