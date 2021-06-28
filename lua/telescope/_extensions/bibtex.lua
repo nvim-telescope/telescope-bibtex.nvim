@@ -73,10 +73,14 @@ local function read_file(file)
   local data = p:read()
   data = data:gsub("\r", "")
   local entries = {}
-  while data ~= '' do
-    local entry = data:match('@[%w_]*%b{}')
-    table.insert(entries, entry)
-    data = data:sub(#entry + 2)
+  local raw_entry = ''
+  while true do
+    raw_entry = data:match('@[%w_]*%b{}')
+    if raw_entry == nil then
+      break
+    end
+    table.insert(entries, raw_entry)
+    data = data:sub(#raw_entry + 2)
   end
   for _,entry in pairs(entries) do
     local label = entry:match("{[%w_]*,\n")
