@@ -35,17 +35,6 @@ local function table_contains(table, element)
   return false
 end
 
-local function end_of_entry(line, par_mismatch)
-  local line_blank = line:gsub("%s", "")
-  for _ in (line_blank):gmatch("{") do
-    par_mismatch = par_mismatch + 1
-  end
-  for _ in (line_blank):gmatch("}") do
-    par_mismatch = par_mismatch - 1
-  end
-  return par_mismatch == 0
-end
-
 local function getBibFiles(dir)
   scan.scan_dir(dir, { depth = depth, search_pattern = '.*%.bib', on_insert = function(file)
     table.insert(files, {name = file, mtime = 0, entries = {}})
@@ -102,46 +91,6 @@ local function read_file(file)
     end
   end
   return labels, contents, search_relevants
-
-
-  --for line in p:iter() do
-    --if line:match("@%w*{") then
-      --in_entry = true
-      --par_mismatch = 1
-      --local entry = line:gsub("@%w*{", "")
-      --entry = entry:sub(1, -2)
-      --current_entry = entry
-      --table.insert(entries, entry)
-      --contents[current_entry] = { line }
-      --search_relevants[current_entry] = { }
-      --if table_contains(search_keys, [[label]]) then
-        --search_relevants[current_entry]['label'] = current_entry
-      --end
-    --elseif in_entry and line ~= "" then
-      --table.insert(contents[current_entry], line)
-      --if multiline_val then
-        --search_relevants[current_entry][search_key] = search_relevants[current_entry][search_key] .. " " .. vim.trim(line)
-        --multiline_val = false
-      --end
-      --local split = line:find("=")
-      --if split then
-        --search_key = vim.trim(line:sub(1, split - 1))
-        --if table_contains(search_keys, search_key) then
-          --if not end_of_entry(line, 0) then
-            --multiline_val = true
-          --end
-          --local relevant = vim.trim(line:sub(split + 1):gsub(".", sub))
-          --if relevant:find(',', -1) then
-            --relevant = relevant:sub(1, -2)
-          --end
-          --search_relevants[current_entry][search_key] = relevant
-        --end
-      --end
-      --if end_of_entry(line, par_mismatch) then
-        --in_entry = false
-      --end
-    --end
-  --end
 end
 
 local function formatDisplay(entry)
