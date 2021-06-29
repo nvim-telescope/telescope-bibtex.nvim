@@ -34,6 +34,10 @@ You may add custom formats: `id` is the format identifier, `cite_marker` the for
 
 Some people have master `*.bib` files that do not lie within the project tree. Directories and files to retrieve entries from can be set.
 
+The default search matches `author, year, title` in this order.
+
+To search for the citation label, add `label` to the `search_keys`. Other keys to match are named by their tag in the bibtex file.
+
 See the example below for the config in action:
 
 ```
@@ -48,6 +52,7 @@ require"telescope".setup {
       },
       format = 'myCoolFormat',
       global_files = { 'path/to/my/bib/file.bib', 'path/to/my/bib/directory' },
+      search_keys = { 'label', 'author', 'publisher' },
     },
   }
 }
