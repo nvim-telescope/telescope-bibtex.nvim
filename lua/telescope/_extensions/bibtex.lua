@@ -64,7 +64,7 @@ local function read_file(file)
   local entries = {}
   local raw_entry = ''
   while true do
-    raw_entry = data:match('@[%w_-]*%b{}')
+    raw_entry = data:match('@%w*%s*%b{}')
     if raw_entry == nil then
       break
     end
@@ -72,8 +72,8 @@ local function read_file(file)
     data = data:sub(#raw_entry + 2)
   end
   for _,entry in pairs(entries) do
-    local label = entry:match("{[%w_-]*,\n")
-    label = label:gsub("\n",""):sub(2, -2)
+    local label = entry:match("{%s*[^{},~#%\\]+,\n")
+    label = vim.trim(label:gsub("\n",""):sub(2, -2))
     local content = vim.split(entry, "\n")
     table.insert(labels, label)
     contents[label] = content
