@@ -63,3 +63,5 @@ This produces output like `#entry#`.
 Think of this as defining text before and after the entry and putting a `%s` where the entry should be put.
 
 If `format` is not defined, the plugin will fall back to `tex` format.
+
+If the config does not seem to work/apply, check at which point you load the extension. The extension will only be initialized with the right config if it is loaded **after** calling the setup function.
