@@ -73,20 +73,22 @@ local function read_file(file)
   end
   for _,entry in pairs(entries) do
     local label = entry:match("{%s*[^{},~#%\\]+,\n")
-    label = vim.trim(label:gsub("\n",""):sub(2, -2))
-    local content = vim.split(entry, "\n")
-    table.insert(labels, label)
-    contents[label] = content
-    if table_contains(search_keys, [[label]]) then
-      search_relevants[label]['label'] = label
-    end
-    search_relevants[label] = {}
-    for _,key in pairs(search_keys) do
-      local s = entry:match(key .. '%s*=%s*%b{}') or entry:match(key .. '%s*=%s*%b""') or entry:match(key .. '%s*=%s*%d+')
-      if s ~= nil then
-        s = s:match('%b{}') or s:match('%b""') or s:match('%d+')
-        s = s:gsub('["{}\n]', ""):gsub('%s%s+', ' ')
-        search_relevants[label][key] = vim.trim(s)
+    if (label) then
+      label = vim.trim(label:gsub("\n",""):sub(2, -2))
+      local content = vim.split(entry, "\n")
+      table.insert(labels, label)
+      contents[label] = content
+      if table_contains(search_keys, [[label]]) then
+        search_relevants[label]['label'] = label
+      end
+      search_relevants[label] = {}
+      for _,key in pairs(search_keys) do
+        local s = entry:match(key .. '%s*=%s*%b{}') or entry:match(key .. '%s*=%s*%b""') or entry:match(key .. '%s*=%s*%d+')
+        if s ~= nil then
+          s = s:match('%b{}') or s:match('%b""') or s:match('%d+')
+          s = s:gsub('["{}\n]', ""):gsub('%s%s+', ' ')
+          search_relevants[label][key] = vim.trim(s)
+        end
       end
     end
   end
