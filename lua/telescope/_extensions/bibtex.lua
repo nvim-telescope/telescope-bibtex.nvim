@@ -19,6 +19,7 @@ local depth = 1
 local formats = {}
 formats['tex'] = "\\cite{%s}"
 formats['md'] = "@%s"
+formats['plain'] = "%s"
 local fallback_format = 'tex'
 local user_format = fallback_format
 local user_files = {}
@@ -163,9 +164,8 @@ local function bibtex_picker(opts)
       actions.select_default:replace(function(_, _)
         local entry = string.format(formats[user_format], action_state.get_selected_entry().id)
         actions.close(prompt_bufnr)
-        vim.api.nvim_put({entry}, "", true, true)
-        -- TODO: prettier insert mode? <16-01-21, @noahares> --
-        vim.api.nvim_feedkeys("ea", "n", true)
+        vim.api.nvim_put({entry}, "", false, false)
+        vim.api.nvim_feedkeys("la", "n", true)
       end)
       return true
     end,

@@ -28,7 +28,13 @@ lua require"telescope".load_extension("bibtex")
 
 The default search depth for `*.bib` files is 1.
 
-The currently supported formats are `tex` and `md` for `\cite{entry}` and `@entry` respectively.
+The currently supported formats are:
+
+| Identifier | Result         |
+| ---------- | -------------- |
+| `tex`      | `\cite{entry}` |
+| `md`       | `@entry`       |
+| `plain`    | `entry`        |
 
 You may add custom formats: `id` is the format identifier, `cite_marker` the format to apply.
 
