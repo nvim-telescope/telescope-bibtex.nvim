@@ -84,7 +84,8 @@ local function read_file(file)
       end
       search_relevants[label] = {}
       for _,key in pairs(search_keys) do
-        local s = entry:match(key .. '%s*=%s*%b{}') or entry:match(key .. '%s*=%s*%b""') or entry:match(key .. '%s*=%s*%d+')
+        local match_base = '%f[%w]' .. key
+        local s = entry:match(match_base .. '%s*=%s*%b{}') or entry:match(match_base .. '%s*=%s*%b""') or entry:match(match_base .. '%s*=%s*%d+')
         if s ~= nil then
           s = s:match('%b{}') or s:match('%b""') or s:match('%d+')
           s = s:gsub('["{}\n]', ""):gsub('%s%s+', ' ')
