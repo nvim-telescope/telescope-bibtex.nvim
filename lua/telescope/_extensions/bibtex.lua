@@ -211,8 +211,8 @@ local function bibtex_entry_picker(opts)
       actions.select_default:replace(function(_, _)
         local entry = action_state.get_selected_entry().id
         actions.close(prompt_bufnr)
-        vim.api.nvim_put(entry, "", false, false)
-        vim.api.nvim_feedkeys("la", "n", true)
+        vim.api.nvim_put(entry, "", true, true)
+        vim.api.nvim_feedkeys("a", "n", true)
       end)
       return true
     end,
