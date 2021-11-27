@@ -112,8 +112,7 @@ local function formatDisplay(entry)
   return vim.trim(display_string:sub(2)), search_string:sub(2)
 end
 
-local function bibtex_picker(opts)
-  opts = opts or {}
+local function setup_picker()
   if not files_initialized then
     initFiles()
     files_initialized = true
@@ -135,6 +134,12 @@ local function bibtex_picker(opts)
       end
     end
   end
+  return results
+end
+
+local function bibtex_picker(opts)
+  opts = opts or {}
+  local results = setup_picker()
   pickers.new(opts, {
     prompt_title = 'Bibtex References',
     finder = finders.new_table {
@@ -188,6 +193,7 @@ return telescope.register_extension {
     search_keys = ext_config.search_keys or search_keys
   end,
   exports = {
-    bibtex = bibtex_picker
+    bibtex = bibtex_picker,
+    bibtex_entry = bibtex_entry_picker
   },
 }
