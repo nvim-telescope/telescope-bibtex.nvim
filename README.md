@@ -26,7 +26,7 @@ lua require"telescope".load_extension("bibtex")
 :Telescope bibtex entry
 ```
 
-**`Telescope bibtex` will still work for now, but becomes deprecated in favor of `Telescope bibtex cite` and will eventually be removed!**
+**Calling `:Telescope bibtex` will still work for now, but becomes deprecated in favor of `:Telescope bibtex cite` and will eventually be removed!**
 
 # Configuration
 
@@ -34,11 +34,12 @@ The default search depth for `*.bib` files is 1.
 
 The currently supported formats are:
 
-| Identifier | Result         |
-| ---------- | -------------- |
-| `tex`      | `\cite{label}` |
-| `md`       | `@label`       |
-| `plain`    | `label`        |
+| Identifier        | Result         |
+| ----------        | -------------- |
+| `tex`             | `\cite{label}` |
+| `md` (deprecated) | `@label`       |
+| `markdown`        | `@label`       |
+| `plain`           | `label`        |
 
 You may add custom formats: `id` is the format identifier, `cite_marker` the format to apply.
 
@@ -74,6 +75,15 @@ The `entry` picker will always paste the whole entry.
 
 Think of this as defining text before and after the entry and putting a `%s` where the entry should be put.
 
-If `format` is not defined, the plugin will fall back to `tex` format.
+If `format` is not defined, the plugin will try to find the right format based on the filetype.
+If there is no format for the filetype it will fall back to `plain` format.
+
+To quickly change the format, you can specify it via the options:
+
+```
+:Telescope bibtex cite format=markdown
+```
+
+# Troubleshooting
 
 If the config does not seem to work/apply, check at which point you load the extension. The extension will only be initialized with the right config if it is loaded **after** calling the setup function.

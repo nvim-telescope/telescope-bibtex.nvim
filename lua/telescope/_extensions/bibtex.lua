@@ -19,9 +19,11 @@ local depth = 1
 local formats = {}
 formats['tex'] = "\\cite{%s}"
 formats['md'] = "@%s"
+formats['markdown'] = "@%s"
 formats['plain'] = "%s"
-local fallback_format = 'tex'
-local user_format = fallback_format
+local fallback_format = 'plain'
+local use_auto_format = false
+local user_format = ''
 local user_files = {}
 local files_initialized = false
 local files = {}
@@ -139,6 +141,14 @@ end
 
 local function bibtex_picker(opts)
   opts = opts or {}
+  local format_string = ''
+  if opts.format ~= nil then
+    format_string = formats[opts.format] or formats[user_format]
+  elseif use_auto_format then
+    format_string = formats[vim.bo.filetype] or formats[fallback_format]
+  else
+    format_string = formats[user_format] or formats[fallback_format]
+  end
   local results = setup_picker()
   pickers.new(opts, {
     prompt_title = 'Bibtex References',
@@ -168,7 +178,7 @@ local function bibtex_picker(opts)
     sorter = conf.generic_sorter(opts),
     attach_mappings = function(prompt_bufnr)
       actions.select_default:replace(function(_, _)
-        local entry = string.format(formats[user_format], action_state.get_selected_entry().id)
+        local entry = string.format(format_string, action_state.get_selected_entry().id)
         actions.close(prompt_bufnr)
         vim.api.nvim_put({entry}, "", false, false)
         vim.api.nvim_feedkeys("la", "n", true)
@@ -226,9 +236,11 @@ return telescope.register_extension {
     for _, format in pairs(custom_formats) do
       formats[format.id] = format.cite_marker
     end
-    user_format = ext_config.format or fallback_format
-    if formats[user_format] == nil then
+    if ext_config.format ~= nil and formats[ext_config.format] ~= nil then
+      user_format = ext_config.format
+    else
       user_format = fallback_format
+      use_auto_format = true
     end
     user_files = ext_config.global_files or {}
     search_keys = ext_config.search_keys or search_keys
