@@ -139,6 +139,8 @@ end
 
 local function bibtex_picker(opts)
   opts = opts or {}
+  local format = opts.format or user_format
+  local format_string = formats[format] or formats[user_format]
   local results = setup_picker()
   pickers.new(opts, {
     prompt_title = 'Bibtex References',
@@ -168,7 +170,7 @@ local function bibtex_picker(opts)
     sorter = conf.generic_sorter(opts),
     attach_mappings = function(prompt_bufnr)
       actions.select_default:replace(function(_, _)
-        local entry = string.format(formats[user_format], action_state.get_selected_entry().id)
+        local entry = string.format(format_string, action_state.get_selected_entry().id)
         actions.close(prompt_bufnr)
         vim.api.nvim_put({entry}, "", false, false)
         vim.api.nvim_feedkeys("la", "n", true)
