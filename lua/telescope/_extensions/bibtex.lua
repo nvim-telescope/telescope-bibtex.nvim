@@ -112,8 +112,7 @@ local function formatDisplay(entry)
   return vim.trim(display_string:sub(2)), search_string:sub(2)
 end
 
-local function bibtex_picker(opts)
-  opts = opts or {}
+local function setup_picker()
   if not files_initialized then
     initFiles()
     files_initialized = true
@@ -135,6 +134,12 @@ local function bibtex_picker(opts)
       end
     end
   end
+  return results
+end
+
+local function bibtex_picker(opts)
+  opts = opts or {}
+  local results = setup_picker()
   pickers.new(opts, {
     prompt_title = 'Bibtex References',
     finder = finders.new_table {
@@ -173,6 +178,47 @@ local function bibtex_picker(opts)
   }):find()
 end
 
+local function bibtex_entry_picker(opts)
+  opts = opts or {}
+  local results = setup_picker()
+  pickers.new(opts, {
+    prompt_title = 'Bibtex Entries',
+    finder = finders.new_table {
+      results = results,
+      entry_maker = function(line)
+        local display_string, search_string = formatDisplay(line.search_keys)
+        if display_string == '' then
+          display_string = line.name
+        end
+        if search_string == '' then
+          search_string = line.name
+        end
+        return {
+          value = search_string,
+          ordinal = search_string,
+          display = display_string,
+          id = line.content,
+          preview_command = function(entry, bufnr)
+            vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, results[entry.index].content)
+            putils.highlighter(bufnr, 'bib')
+          end,
+        }
+      end
+    },
+    previewer = previewers.display_content.new(opts),
+    sorter = conf.generic_sorter(opts),
+    attach_mappings = function(prompt_bufnr)
+      actions.select_default:replace(function(_, _)
+        local entry = action_state.get_selected_entry().id
+        actions.close(prompt_bufnr)
+        vim.api.nvim_put(entry, "", true, true)
+        vim.api.nvim_feedkeys("a", "n", true)
+      end)
+      return true
+    end,
+  }):find()
+end
+
 return telescope.register_extension {
   setup = function(ext_config)
     depth = ext_config.depth or depth
@@ -188,6 +234,8 @@ return telescope.register_extension {
     search_keys = ext_config.search_keys or search_keys
   end,
   exports = {
-    bibtex = bibtex_picker
+    bibtex = bibtex_picker,
+    cite = bibtex_picker,
+    entry = bibtex_entry_picker
   },
 }
