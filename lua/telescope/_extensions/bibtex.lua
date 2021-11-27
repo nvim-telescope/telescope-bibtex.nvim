@@ -181,9 +181,11 @@ local function bibtex_picker(opts)
       actions.select_default:replace(function(_, _)
         local entry = string.format(format_string, action_state.get_selected_entry().id)
         actions.close(prompt_bufnr)
-        vim.api.nvim_put({entry}, "", true, true)
         if mode == "i" then
+          vim.api.nvim_put({entry}, "", false, true)
           vim.api.nvim_feedkeys("a", "n", true)
+        else
+          vim.api.nvim_put({entry}, "", true, true)
         end
       end)
       return true
@@ -225,9 +227,11 @@ local function bibtex_entry_picker(opts)
       actions.select_default:replace(function(_, _)
         local entry = action_state.get_selected_entry().id
         actions.close(prompt_bufnr)
-        vim.api.nvim_put(entry, "", true, true)
         if mode == "i" then
+          vim.api.nvim_put({entry}, "", false, true)
           vim.api.nvim_feedkeys("a", "n", true)
+        else
+          vim.api.nvim_put({entry}, "", true, true)
         end
       end)
       return true
