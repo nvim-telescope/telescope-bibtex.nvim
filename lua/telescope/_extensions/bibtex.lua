@@ -139,17 +139,25 @@ local function setup_picker()
   return results
 end
 
+local function parse_format_string(opts)
+  local format_string = nil
+  if opts.format ~= nil then
+    format_string = formats[opts.format]
+  elseif use_auto_format then
+    if vim.bo.filetype:match('markdown%.%a+') then
+      format_string = formats['markdown']
+    else
+      format_string = formats[vim.bo.filetype]
+    end
+  end
+  format_string = format_string or formats[user_format]
+  return format_string
+end
+
 local function bibtex_picker(opts)
   opts = opts or {}
   local mode = vim.api.nvim_get_mode().mode
-  local format_string = ''
-  if opts.format ~= nil then
-    format_string = formats[opts.format] or formats[user_format]
-  elseif use_auto_format then
-    format_string = formats[vim.bo.filetype] or formats[fallback_format]
-  else
-    format_string = formats[user_format] or formats[fallback_format]
-  end
+  local format_string = parse_format_string(opts)
   local results = setup_picker()
   pickers.new(opts, {
     prompt_title = 'Bibtex References',
