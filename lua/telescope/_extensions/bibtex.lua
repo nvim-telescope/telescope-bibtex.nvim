@@ -144,10 +144,9 @@ local function parse_format_string(opts)
   if opts.format ~= nil then
     format_string = formats[opts.format]
   elseif use_auto_format then
-    if vim.bo.filetype:match('markdown%.%a+') then
+    format_string = formats[vim.bo.filetype]
+    if format_string == nil and vim.bo.filetype:match('markdown%.%a+') then
       format_string = formats['markdown']
-    else
-      format_string = formats[vim.bo.filetype]
     end
   end
   format_string = format_string or formats[user_format]
