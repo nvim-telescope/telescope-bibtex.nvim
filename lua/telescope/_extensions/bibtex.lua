@@ -235,10 +235,10 @@ local function bibtex_entry_picker(opts)
         local entry = action_state.get_selected_entry().id
         actions.close(prompt_bufnr)
         if mode == "i" then
-          vim.api.nvim_put({entry}, "", false, true)
+          vim.api.nvim_put(entry, "", false, true)
           vim.api.nvim_feedkeys("a", "n", true)
         else
-          vim.api.nvim_put({entry}, "", true, true)
+          vim.api.nvim_put(entry, "", true, true)
         end
       end)
       return true
