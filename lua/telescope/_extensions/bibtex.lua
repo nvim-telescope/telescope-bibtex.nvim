@@ -219,6 +219,16 @@ entry_append = function(prompt_bufnr)
   end
 end
 
+
+-- Split a string using the seperator
+local split = function(str, sep)
+  local result={}
+  for item in string.gmatch(str, "([^"..sep.."]+)") do
+    table.insert(result, item)
+  end
+  return result
+end
+
 open_file = function(prompt_bufnr)
   local entry = action_state.get_selected_entry().id.content
   for _, line in pairs(entry) do
@@ -227,11 +237,11 @@ open_file = function(prompt_bufnr)
     if s ~= nil then
       s = s:match('%b{}') or s:match('%b""') or s:match('%d+')
       s = s:gsub('["{}\n]', ""):gsub('%s%s+', ' ')
-      s = s:match('%b::')
-      s = s:gsub(':', '')
+      file = split(s, ":")
+      extension = string.gsub(file[3], '%s+', '')
       job:new({
-        command = reader[1],
-        args = { s },
+        command = reader[extension],
+        args = { file[2] },
         detached = true,
       }):start()
       break
