@@ -232,6 +232,7 @@ open_file = function(prompt_bufnr)
       job:new({
         command = reader[1],
         args = { s },
+        detached = true,
       }):start()
       break
     end
