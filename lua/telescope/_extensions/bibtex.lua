@@ -174,7 +174,7 @@ local function bibtex_picker(opts)
           value = search_string,
           ordinal = search_string,
           display = display_string,
-          id = line.name,
+          id = line,
           preview_command = function(entry, bufnr)
             vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, results[entry.index].content)
             putils.highlighter(bufnr, 'bib')
@@ -184,66 +184,36 @@ local function bibtex_picker(opts)
     },
     previewer = previewers.display_content.new(opts),
     sorter = conf.generic_sorter(opts),
-    attach_mappings = function(prompt_bufnr)
-      actions.select_default:replace(function(_, _)
-        local entry = string.format(format_string, action_state.get_selected_entry().id)
-        actions.close(prompt_bufnr)
-        if mode == "i" then
-          vim.api.nvim_put({entry}, "", false, true)
-          vim.api.nvim_feedkeys("a", "n", true)
-        else
-          vim.api.nvim_put({entry}, "", true, true)
-        end
-      end)
+    attach_mappings = function(_, map)
+      actions.select_default:replace(key_append(format_string))
+      map("i", "<c-e>", entry_append)
       return true
     end,
   }):find()
 end
 
-local function bibtex_entry_picker(opts)
-  opts = opts or {}
-  local mode = vim.api.nvim_get_mode().mode
-  local results = setup_picker()
-  pickers.new(opts, {
-    prompt_title = 'Bibtex Entries',
-    finder = finders.new_table {
-      results = results,
-      entry_maker = function(line)
-        local display_string, search_string = formatDisplay(line.search_keys)
-        if display_string == '' then
-          display_string = line.name
-        end
-        if search_string == '' then
-          search_string = line.name
-        end
-        return {
-          value = search_string,
-          ordinal = search_string,
-          display = display_string,
-          id = line.content,
-          preview_command = function(entry, bufnr)
-            vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, results[entry.index].content)
-            putils.highlighter(bufnr, 'bib')
-          end,
-        }
-      end
-    },
-    previewer = previewers.display_content.new(opts),
-    sorter = conf.generic_sorter(opts),
-    attach_mappings = function(prompt_bufnr)
-      actions.select_default:replace(function(_, _)
-        local entry = action_state.get_selected_entry().id
-        actions.close(prompt_bufnr)
-        if mode == "i" then
-          vim.api.nvim_put(entry, "", false, true)
-          vim.api.nvim_feedkeys("a", "n", true)
-        else
-          vim.api.nvim_put(entry, "", true, true)
-        end
-      end)
-      return true
-    end,
-  }):find()
+key_append = function(format_string)
+  return function(prompt_bufnr)
+    local entry = string.format(format_string, action_state.get_selected_entry().id.name)
+    actions.close(prompt_bufnr)
+    if mode == "i" then
+      vim.api.nvim_put({entry}, "", false, true)
+      vim.api.nvim_feedkeys("a", "n", true)
+    else
+      vim.api.nvim_put({entry}, "", true, true)
+    end
+  end
+end
+
+entry_append = function(prompt_bufnr)
+  local entry = action_state.get_selected_entry().id.content
+  actions.close(prompt_bufnr)
+  if mode == "i" then
+    vim.api.nvim_put(entry, "", false, true)
+    vim.api.nvim_feedkeys("a", "n", true)
+  else
+    vim.api.nvim_put(entry, "", true, true)
+  end
 end
 
 return telescope.register_extension {
@@ -264,7 +234,5 @@ return telescope.register_extension {
   end,
   exports = {
     bibtex = bibtex_picker,
-    cite = bibtex_picker,
-    entry = bibtex_entry_picker
   },
 }
