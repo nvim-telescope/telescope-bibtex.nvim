@@ -12,6 +12,7 @@ local previewers = require('telescope.previewers')
 local conf = require('telescope.config').values
 local scan = require('plenary.scandir')
 local path = require('plenary.path')
+local job = require('plenary.job')
 local putils = require('telescope.previewers.utils')
 local loop = vim.loop
 
@@ -28,6 +29,7 @@ local user_files = {}
 local files_initialized = false
 local files = {}
 local search_keys = { 'author', 'year', 'title' }
+local reader = nil
 
 local function table_contains(table, element)
   for _, value in pairs(table) do
@@ -187,6 +189,7 @@ local function bibtex_picker(opts)
     attach_mappings = function(_, map)
       actions.select_default:replace(key_append(format_string))
       map("i", "<c-e>", entry_append)
+      map("i", "<c-o>", open_file)
       return true
     end,
   }):find()
@@ -216,8 +219,29 @@ entry_append = function(prompt_bufnr)
   end
 end
 
+open_file = function(prompt_bufnr)
+  local entry = action_state.get_selected_entry().id.content
+  for _, line in pairs(entry) do
+    local match_base = '%f[%w]file'
+    local s = line:match(match_base .. '%s*=%s*%b{}') or line:match(match_base .. '%s*=%s*%b""') or line:match(match_base .. '%s*=%s*%d+')
+    if s ~= nil then
+      s = s:match('%b{}') or s:match('%b""') or s:match('%d+')
+      s = s:gsub('["{}\n]', ""):gsub('%s%s+', ' ')
+      s = s:match('%b::')
+      s = s:gsub(':', '')
+      job:new({
+        command = reader[1],
+        args = { s },
+      }):start()
+      break
+    end
+  end
+  actions.close(prompt_bufnr)
+end
+
 return telescope.register_extension {
   setup = function(ext_config)
+    reader = ext_config.reader or reader
     depth = ext_config.depth or depth
     local custom_formats = ext_config.custom_formats or {}
     for _, format in pairs(custom_formats) do
