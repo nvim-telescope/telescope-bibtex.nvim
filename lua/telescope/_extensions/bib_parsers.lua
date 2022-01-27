@@ -81,13 +81,17 @@ P.file_list = function(str)
 
     elseif commit == Commit.path then
       term.path = word
-      if term.name == nil then
+
+      if term.name == nil and state ~= State.done then
         table.insert(result, {})
       end
 
     elseif commit == Commit.ext then
       term.ext = word
-      table.insert(result, {})
+
+      if state ~= State.done then
+        table.insert(result, {})
+      end
     end
 
     if state == State.done then
