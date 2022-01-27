@@ -15,6 +15,7 @@ local path = require('plenary.path')
 local job = require('plenary.job')
 local putils = require('telescope.previewers.utils')
 local loop = vim.loop
+local parser = require('telescope._extensions.bib_parsers')
 
 local depth = 1
 local formats = {}
@@ -219,16 +220,6 @@ entry_append = function(prompt_bufnr)
   end
 end
 
-
--- Split a string using the seperator
-local split = function(str, sep)
-  local result={}
-  for item in string.gmatch(str, "([^"..sep.."]+)") do
-    table.insert(result, item)
-  end
-  return result
-end
-
 open_file = function(prompt_bufnr)
   local entry = action_state.get_selected_entry().id.content
   for _, line in pairs(entry) do
@@ -236,12 +227,15 @@ open_file = function(prompt_bufnr)
     local s = line:match(match_base .. '%s*=%s*%b{}') or line:match(match_base .. '%s*=%s*%b""') or line:match(match_base .. '%s*=%s*%d+')
     if s ~= nil then
       s = s:match('%b{}') or s:match('%b""') or s:match('%d+')
-      s = s:gsub('["{}\n]', ""):gsub('%s%s+', ' ')
-      file = split(s, ":")
-      extension = string.gsub(file[3], '%s+', '')
+      files = parser.file_list(s)
+      if #files > 1 then
+        print("TODO deal with multiple entries")
+      end
+      file = files[1]
+      extension = file.extension or "pdf"
       job:new({
         command = reader[extension],
-        args = { file[2] },
+        args = { file.path },
         detached = true,
       }):start()
       break
