@@ -16,10 +16,11 @@ local Commit = {
 P = {}
 
 P.file_list = function(str)
-  result = {}
+  local result = {}
   table.insert(result, {})
-  start = 1
-  index = 1
+  local start = 1
+  local index = 1
+  local state = nil
   for c in str:gmatch"." do
 
     if state == nil then
