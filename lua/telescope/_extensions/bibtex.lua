@@ -30,7 +30,7 @@ local user_files = {}
 local files_initialized = false
 local files = {}
 local search_keys = { 'author', 'year', 'title' }
-local reader = nil
+local reader = {}
 
 local function table_contains(table, element)
   for _, value in pairs(table) do
@@ -232,9 +232,8 @@ open_file = function(prompt_bufnr)
         print("TODO deal with multiple entries")
       end
       file = files[1]
-      extension = file.extension or "pdf"
       job:new({
-        command = reader[extension],
+        command = reader[file.extension] or "xdg-open",
         args = { file.path },
         detached = true,
       }):start()
