@@ -21,12 +21,16 @@ Plug 'nvim-telescope/telescope-bibtex.nvim'
 ```
 lua require"telescope".load_extension("bibtex")
 
-:Telescope bibtex cite
-
-:Telescope bibtex entry
+:Telescope bibtex
 ```
 
-**Calling `:Telescope bibtex` will still work for now, but becomes deprecated in favor of `:Telescope bibtex cite` and will eventually be removed!**
+# Keybindings
+
+| key     | Usage                     |
+|---------|---------------------------|
+| `<cr>`  | Insert the citation label |
+| `<c-e>` | Insert the citation entry |
+
 
 # Configuration
 
