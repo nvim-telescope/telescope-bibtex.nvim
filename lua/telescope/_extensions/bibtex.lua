@@ -28,6 +28,7 @@ local user_files = {}
 local files_initialized = false
 local files = {}
 local search_keys = { 'author', 'year', 'title' }
+local citation_format = '{{a}} ({{y}}), {{t}}.'
 
 local function table_contains(table, element)
   for _, value in pairs(table) do
@@ -194,6 +195,7 @@ local function bibtex_picker(opts)
     attach_mappings = function(_, map)
       actions.select_default:replace(key_append(format_string))
       map('i', '<c-e>', entry_append)
+      map('i', '<c-c>', citation_append)
       return true
     end,
   }):find()
@@ -225,6 +227,64 @@ entry_append = function(prompt_bufnr)
   end
 end
 
+local function parse_line(line, exp)
+  local parsed
+  if line:find(exp) then
+    parsed = line:match(exp) or ''
+  end
+  return parsed
+end
+
+local function parse_entry(entry)
+  local parsed = {}
+  for _, line in pairs(entry) do
+    parsed.author = parse_line(line, 'author%s*=%s*["{]*(.-)["}],?') or parsed.author or ''
+    parsed.year = parse_line(line, 'year%s*=%s*["{]?(%d+)["}]?,?') or parsed.year or ''
+    parsed.title = parse_line(line, 'title%s*=%s*["{]*(.-)["}],?$') or parsed.title or ''
+  end
+  return parsed
+end
+
+local function clean_titles(title)
+  title = title:gsub('{', '')
+  title = title:gsub('}', '')
+  return title
+end
+
+local function cite_template(parsed, template)
+  local citation = template
+  parsed.title = clean_titles(parsed.title)
+  local substs = {
+    a = parsed.author,
+    t = parsed.title,
+    y = parsed.year,
+  }
+  for k, v in pairs(substs) do
+    citation = citation:gsub('{{' .. k .. '}}', v)
+  end
+
+  return citation
+end
+
+local function format_citation(entry, template)
+  local parsed = parse_entry(entry)
+  local citation = cite_template(parsed, template)
+
+  return citation
+end
+
+citation_append = function(prompt_bufnr)
+  local entry = action_state.get_selected_entry().id.content
+  actions.close(prompt_bufnr)
+  local citation = format_citation(entry, citation_format)
+  if mode == 'i' then
+    vim.api.nvim_put(citation, '', false, true)
+    vim.api.nvim_feedkeys('a', 'n', true)
+  else
+    vim.api.nvim_paste(citation, true, -1)
+  end
+end
+
 return telescope.register_extension({
   setup = function(ext_config)
     depth = ext_config.depth or depth
@@ -240,6 +300,7 @@ return telescope.register_extension({
     end
     user_files = ext_config.global_files or {}
     search_keys = ext_config.search_keys or search_keys
+    citation_format = ext_config.citation_format or '{{a}} ({{y}}), {{t}}.'
   end,
   exports = {
     bibtex = bibtex_picker,
