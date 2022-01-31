@@ -29,6 +29,8 @@ local files_initialized = false
 local files = {}
 local search_keys = { 'author', 'year', 'title' }
 local citation_format = '{{a}} ({{y}}), {{t}}.'
+local citation_trim_firstname = true
+local citation_max_auth = 2
 
 local function table_contains(table, element)
   for _, value in pairs(table) do
@@ -241,6 +243,18 @@ local function parse_entry(entry)
     parsed.author = parse_line(line, 'author%s*=%s*["{]*(.-)["}],?') or parsed.author or ''
     parsed.year = parse_line(line, 'year%s*=%s*["{]?(%d+)["}]?,?') or parsed.year or ''
     parsed.title = parse_line(line, 'title%s*=%s*["{]*(.-)["}],?$') or parsed.title or ''
+    parsed.booktitle = parse_line(line, 'booktitle%s*=%s*["{]*(.-)["}],?$') or parsed.title or ''
+    parsed.date = parse_line(line, 'date%s*=%s*["{]*(.-)["}],?$') or parsed.title or ''
+    parsed.editor = parse_line(line, 'editor%s*=%s*["{]*(.-)["}],?$') or parsed.title or ''
+    parsed.isbn = parse_line(line, 'isbn%s*=%s*["{]*(.-)["}],?$') or parsed.title or ''
+    parsed.location = parse_line(line, 'location%s*=%s*["{]*(.-)["}],?$') or parsed.title or ''
+    parsed.month = parse_line(line, 'month%s*=%s*["{]*(.-)["}],?$') or parsed.title or ''
+    parsed.number = parse_line(line, 'number%s*=%s*["{]*(.-)["}],?$') or parsed.title or ''
+    parsed.pages = parse_line(line, 'pages%s*=%s*["{]*(.-)["}],?$') or parsed.title or ''
+    parsed.pagetotal = parse_line(line, 'pagetotal%s*=%s*["{]*(.-)["}],?$') or parsed.title or ''
+    parsed.publisher = parse_line(line, 'publisher%s*=%s*["{]*(.-)["}],?$') or parsed.title or ''
+    parsed.url = parse_line(line, 'url%s*=%s*["{]*(.-)["}],?$') or parsed.title or ''
+    parsed.volume = parse_line(line, 'volume%s*=%s*["{]*(.-)["}],?$') or parsed.title or ''
   end
   return parsed
 end
@@ -254,10 +268,23 @@ end
 local function cite_template(parsed, template)
   local citation = template
   parsed.title = clean_titles(parsed.title)
+  parsed.booktitle = clean_titles(parsed.booktitle)
   local substs = {
     a = parsed.author,
     t = parsed.title,
+    bt = parsed.booktitle,
     y = parsed.year,
+    m = parsed.month,
+    d = parsed.date,
+    e = parsed.editor,
+    isbn = parsed.isbn,
+    l = parsed.location,
+    n = parsed.number,
+    p = parsed.pages,
+    P = parsed.pagetotal,
+    pu = parsed.publisher,
+    url = parsed.url,
+    vol = parsed.volume,
   }
   for k, v in pairs(substs) do
     citation = citation:gsub('{{' .. k .. '}}', v)
@@ -266,8 +293,43 @@ local function cite_template(parsed, template)
   return citation
 end
 
+local function trim_firstname(name)
+  local tmpauth = {}
+  for match in name:gmatch('(.-, %a)') do
+    table.insert(tmpauth, match)
+  end
+  local trimmed = tmpauth[1] .. '.'
+
+  return trimmed
+end
+
+local function shorten_author(parsed, max_auth)
+  local shortened = parsed.author
+  local t = {}
+  local sep = ' and '
+  for auth in string.gmatch(parsed.author .. sep, '(.-)' .. sep) do
+    if citation_trim_firstname == true then
+      auth = trim_firstname(auth)
+    end
+    table.insert(t, auth)
+  end
+
+  if #t > max_auth then
+    shortened = table.concat(t, ', ', 1, max_auth) .. ', et al.'
+  elseif #t == 1 then
+    shortened = trim_firstname(parsed.author)
+  else
+    shortened = table.concat(t, ', ', 1, #t - 1) .. ' and ' .. t[#t]
+  end
+
+  return shortened
+end
+
 local function format_citation(entry, template)
   local parsed = parse_entry(entry)
+
+  parsed.author = shorten_author(parsed, citation_max_auth)
+
   local citation = cite_template(parsed, template)
 
   return citation
@@ -301,6 +363,8 @@ return telescope.register_extension({
     user_files = ext_config.global_files or {}
     search_keys = ext_config.search_keys or search_keys
     citation_format = ext_config.citation_format or '{{a}} ({{y}}), {{t}}.'
+    citation_trim_firstname = ext_config.citation_trim_firstname or true
+    citation_max_auth = ext_config.citation_max_auth or 2
   end,
   exports = {
     bibtex = bibtex_picker,
