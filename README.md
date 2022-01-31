@@ -21,12 +21,16 @@ Plug 'nvim-telescope/telescope-bibtex.nvim'
 ```
 lua require"telescope".load_extension("bibtex")
 
-:Telescope bibtex cite
-
-:Telescope bibtex entry
+:Telescope bibtex
 ```
 
-**Calling `:Telescope bibtex` will still work for now, but becomes deprecated in favor of `:Telescope bibtex cite` and will eventually be removed!**
+# Keybindings (Actions)
+
+| key     | Usage                     |
+|---------|---------------------------|
+| `<cr>`  | Insert the citation label |
+| `<c-e>` | Insert the citation entry |
+
 
 # Configuration
 
@@ -37,7 +41,6 @@ The currently supported formats are:
 | Identifier        | Result         |
 | ----------        | -------------- |
 | `tex`             | `\cite{label}` |
-| `md` (deprecated) | `@label`       |
 | `markdown`        | `@label`       |
 | `plain`           | `label`        |
 
@@ -71,7 +74,7 @@ require"telescope".setup {
 
 This produces output like `#label#`.
 
-The `entry` picker will always paste the whole entry.
+The `entry` action will always paste the whole entry.
 
 Think of this as defining text before and after the entry and putting a `%s` where the entry should be put.
 
@@ -81,7 +84,7 @@ If there is no format for the filetype it will fall back to `plain` format.
 To quickly change the format, you can specify it via the options:
 
 ```
-:Telescope bibtex cite format=markdown
+:Telescope bibtex format=markdown
 ```
 
 # Troubleshooting
