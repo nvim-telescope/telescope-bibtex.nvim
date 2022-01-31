@@ -295,10 +295,13 @@ end
 
 local function trim_firstname(name)
   local tmpauth = {}
+  local trimmed = name
   for match in name:gmatch('(.-, %a)') do
     table.insert(tmpauth, match)
   end
-  local trimmed = tmpauth[1] .. '.'
+  if tmpauth[1] ~= nil then
+    trimmed = tmpauth[1] .. '.'
+  end
 
   return trimmed
 end
