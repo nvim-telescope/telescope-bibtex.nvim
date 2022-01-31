@@ -24,7 +24,7 @@ lua require"telescope".load_extension("bibtex")
 :Telescope bibtex
 ```
 
-# Keybindings
+# Keybindings (Actions)
 
 | key     | Usage                     |
 |---------|---------------------------|
@@ -41,7 +41,6 @@ The currently supported formats are:
 | Identifier        | Result         |
 | ----------        | -------------- |
 | `tex`             | `\cite{label}` |
-| `md` (deprecated) | `@label`       |
 | `markdown`        | `@label`       |
 | `plain`           | `label`        |
 
@@ -75,7 +74,7 @@ require"telescope".setup {
 
 This produces output like `#label#`.
 
-The `entry` picker will always paste the whole entry.
+The `entry` action will always paste the whole entry.
 
 Think of this as defining text before and after the entry and putting a `%s` where the entry should be put.
 
@@ -85,7 +84,7 @@ If there is no format for the filetype it will fall back to `plain` format.
 To quickly change the format, you can specify it via the options:
 
 ```
-:Telescope bibtex cite format=markdown
+:Telescope bibtex format=markdown
 ```
 
 # Troubleshooting
