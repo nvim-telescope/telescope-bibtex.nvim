@@ -1,7 +1,9 @@
 local has_telescope, telescope = pcall(require, 'telescope')
 
 if not has_telescope then
-  error('This plugin requires telescope.nvim (https://github.com/nvim-telescope/telescope.nvim)')
+  error(
+    'This plugin requires telescope.nvim (https://github.com/nvim-telescope/telescope.nvim)'
+  )
 end
 
 local finders = require('telescope.finders')
@@ -137,8 +139,22 @@ local function setup_picker()
       file.entries = {}
       local result, content, search_relevants = read_file(file.name)
       for _, entry in pairs(result) do
-        table.insert(results, { name = entry, content = content[entry], search_keys = search_relevants[entry] })
-        table.insert(file.entries, { name = entry, content = content[entry], search_keys = search_relevants[entry] })
+        table.insert(
+          results,
+          {
+            name = entry,
+            content = content[entry],
+            search_keys = search_relevants[entry],
+          }
+        )
+        table.insert(
+          file.entries,
+          {
+            name = entry,
+            content = content[entry],
+            search_keys = search_relevants[entry],
+          }
+        )
       end
       file.mtime = mtime
     else
@@ -186,7 +202,13 @@ local function bibtex_picker(opts)
           display = display_string,
           id = line,
           preview_command = function(entry, bufnr)
-            vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, results[entry.index].content)
+            vim.api.nvim_buf_set_lines(
+              bufnr,
+              0,
+              -1,
+              true,
+              results[entry.index].content
+            )
             putils.highlighter(bufnr, 'bib')
           end,
         }
@@ -206,7 +228,10 @@ end
 key_append = function(format_string)
   return function(prompt_bufnr)
     local mode = vim.api.nvim_get_mode().mode
-    local entry = string.format(format_string, action_state.get_selected_entry().id.name)
+    local entry = string.format(
+      format_string,
+      action_state.get_selected_entry().id.name
+    )
     actions.close(prompt_bufnr)
     if mode == 'i' then
       vim.api.nvim_put({ entry }, '', false, true)
@@ -240,21 +265,51 @@ end
 local function parse_entry(entry)
   local parsed = {}
   for _, line in pairs(entry) do
-    parsed.author = parse_line(line, 'author%s*=%s*["{]*(.-)["}],?$') or parsed.author or ''
-    parsed.year = parse_line(line, 'year%s*=%s*["{]?(%d+)["}]?,?$') or parsed.year or ''
-    parsed.title = parse_line(line, 'title%s*=%s*["{]*(.-)["}],?$') or parsed.title or ''
-    parsed.booktitle = parse_line(line, 'booktitle%s*=%s*["{]*(.-)["}],?$') or parsed.title or ''
-    parsed.date = parse_line(line, 'date%s*=%s*["{]*(.-)["}],?$') or parsed.title or ''
-    parsed.editor = parse_line(line, 'editor%s*=%s*["{]*(.-)["}],?$') or parsed.title or ''
-    parsed.isbn = parse_line(line, 'isbn%s*=%s*["{]*(.-)["}],?$') or parsed.title or ''
-    parsed.location = parse_line(line, 'location%s*=%s*["{]*(.-)["}],?$') or parsed.title or ''
-    parsed.month = parse_line(line, 'month%s*=%s*["{]*(.-)["}],?$') or parsed.title or ''
-    parsed.number = parse_line(line, 'number%s*=%s*["{]*(.-)["}],?$') or parsed.title or ''
-    parsed.pages = parse_line(line, 'pages%s*=%s*["{]*(.-)["}],?$') or parsed.title or ''
-    parsed.pagetotal = parse_line(line, 'pagetotal%s*=%s*["{]*(.-)["}],?$') or parsed.title or ''
-    parsed.publisher = parse_line(line, 'publisher%s*=%s*["{]*(.-)["}],?$') or parsed.title or ''
-    parsed.url = parse_line(line, 'url%s*=%s*["{]*(.-)["}],?$') or parsed.title or ''
-    parsed.volume = parse_line(line, 'volume%s*=%s*["{]*(.-)["}],?$') or parsed.title or ''
+    parsed.author = parse_line(line, 'author%s*=%s*["{]*(.-)["}],?$')
+      or parsed.author
+      or ''
+    parsed.year = parse_line(line, 'year%s*=%s*["{]?(%d+)["}]?,?$')
+      or parsed.year
+      or ''
+    parsed.title = parse_line(line, 'title%s*=%s*["{]*(.-)["}],?$')
+      or parsed.title
+      or ''
+    parsed.booktitle = parse_line(line, 'booktitle%s*=%s*["{]*(.-)["}],?$')
+      or parsed.title
+      or ''
+    parsed.date = parse_line(line, 'date%s*=%s*["{]*(.-)["}],?$')
+      or parsed.title
+      or ''
+    parsed.editor = parse_line(line, 'editor%s*=%s*["{]*(.-)["}],?$')
+      or parsed.title
+      or ''
+    parsed.isbn = parse_line(line, 'isbn%s*=%s*["{]*(.-)["}],?$')
+      or parsed.title
+      or ''
+    parsed.location = parse_line(line, 'location%s*=%s*["{]*(.-)["}],?$')
+      or parsed.title
+      or ''
+    parsed.month = parse_line(line, 'month%s*=%s*["{]*(.-)["}],?$')
+      or parsed.title
+      or ''
+    parsed.number = parse_line(line, 'number%s*=%s*["{]*(.-)["}],?$')
+      or parsed.title
+      or ''
+    parsed.pages = parse_line(line, 'pages%s*=%s*["{]*(.-)["}],?$')
+      or parsed.title
+      or ''
+    parsed.pagetotal = parse_line(line, 'pagetotal%s*=%s*["{]*(.-)["}],?$')
+      or parsed.title
+      or ''
+    parsed.publisher = parse_line(line, 'publisher%s*=%s*["{]*(.-)["}],?$')
+      or parsed.title
+      or ''
+    parsed.url = parse_line(line, 'url%s*=%s*["{]*(.-)["}],?$')
+      or parsed.title
+      or ''
+    parsed.volume = parse_line(line, 'volume%s*=%s*["{]*(.-)["}],?$')
+      or parsed.title
+      or ''
   end
 
   return parsed
