@@ -139,22 +139,16 @@ local function setup_picker()
       file.entries = {}
       local result, content, search_relevants = read_file(file.name)
       for _, entry in pairs(result) do
-        table.insert(
-          results,
-          {
-            name = entry,
-            content = content[entry],
-            search_keys = search_relevants[entry],
-          }
-        )
-        table.insert(
-          file.entries,
-          {
-            name = entry,
-            content = content[entry],
-            search_keys = search_relevants[entry],
-          }
-        )
+        table.insert(results, {
+          name = entry,
+          content = content[entry],
+          search_keys = search_relevants[entry],
+        })
+        table.insert(file.entries, {
+          name = entry,
+          content = content[entry],
+          search_keys = search_relevants[entry],
+        })
       end
       file.mtime = mtime
     else
@@ -254,70 +248,21 @@ entry_append = function(prompt_bufnr)
   end
 end
 
-local function parse_line(line, exp)
-  local parsed
-  if line:find(exp) then
-    parsed = line:match(exp) or ''
-  end
-  return parsed
-end
-
 local function parse_entry(entry)
   local parsed = {}
   for _, line in pairs(entry) do
-    parsed.author = parse_line(line, 'author%s*=%s*["{]*(.-)["}],?$')
-      or parsed.author
-      or ''
-    parsed.year = parse_line(line, 'year%s*=%s*["{]?(%d+)["}]?,?$')
-      or parsed.year
-      or ''
-    parsed.title = parse_line(line, 'title%s*=%s*["{]*(.-)["}],?$')
-      or parsed.title
-      or ''
-    parsed.booktitle = parse_line(line, 'booktitle%s*=%s*["{]*(.-)["}],?$')
-      or parsed.title
-      or ''
-    parsed.date = parse_line(line, 'date%s*=%s*["{]*(.-)["}],?$')
-      or parsed.title
-      or ''
-    parsed.editor = parse_line(line, 'editor%s*=%s*["{]*(.-)["}],?$')
-      or parsed.title
-      or ''
-    parsed.isbn = parse_line(line, 'isbn%s*=%s*["{]*(.-)["}],?$')
-      or parsed.title
-      or ''
-    parsed.location = parse_line(line, 'location%s*=%s*["{]*(.-)["}],?$')
-      or parsed.title
-      or ''
-    parsed.month = parse_line(line, 'month%s*=%s*["{]*(.-)["}],?$')
-      or parsed.title
-      or ''
-    parsed.number = parse_line(line, 'number%s*=%s*["{]*(.-)["}],?$')
-      or parsed.title
-      or ''
-    parsed.pages = parse_line(line, 'pages%s*=%s*["{]*(.-)["}],?$')
-      or parsed.title
-      or ''
-    parsed.pagetotal = parse_line(line, 'pagetotal%s*=%s*["{]*(.-)["}],?$')
-      or parsed.title
-      or ''
-    parsed.publisher = parse_line(line, 'publisher%s*=%s*["{]*(.-)["}],?$')
-      or parsed.title
-      or ''
-    parsed.url = parse_line(line, 'url%s*=%s*["{]*(.-)["}],?$')
-      or parsed.title
-      or ''
-    parsed.volume = parse_line(line, 'volume%s*=%s*["{]*(.-)["}],?$')
-      or parsed.title
-      or ''
+    for field, val in string.gmatch(line, '(%w+)%s=%s*["{]*(.-)["}],?$') do
+      parsed[field] = val
+    end
   end
 
   return parsed
 end
 
 local function clean_titles(title)
-  title = title:gsub('{', '')
-  title = title:gsub('}', '')
+  if title ~= nil then
+    title = title:gsub('[%{|%}]', '')
+  end
   return title
 end
 
