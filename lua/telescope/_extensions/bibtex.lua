@@ -240,8 +240,8 @@ end
 local function parse_entry(entry)
   local parsed = {}
   for _, line in pairs(entry) do
-    parsed.author = parse_line(line, 'author%s*=%s*["{]*(.-)["}],?') or parsed.author or ''
-    parsed.year = parse_line(line, 'year%s*=%s*["{]?(%d+)["}]?,?') or parsed.year or ''
+    parsed.author = parse_line(line, 'author%s*=%s*["{]*(.-)["}],?$') or parsed.author or ''
+    parsed.year = parse_line(line, 'year%s*=%s*["{]?(%d+)["}]?,?$') or parsed.year or ''
     parsed.title = parse_line(line, 'title%s*=%s*["{]*(.-)["}],?$') or parsed.title or ''
     parsed.booktitle = parse_line(line, 'booktitle%s*=%s*["{]*(.-)["}],?$') or parsed.title or ''
     parsed.date = parse_line(line, 'date%s*=%s*["{]*(.-)["}],?$') or parsed.title or ''
@@ -256,6 +256,7 @@ local function parse_entry(entry)
     parsed.url = parse_line(line, 'url%s*=%s*["{]*(.-)["}],?$') or parsed.title or ''
     parsed.volume = parse_line(line, 'volume%s*=%s*["{]*(.-)["}],?$') or parsed.title or ''
   end
+
   return parsed
 end
 
