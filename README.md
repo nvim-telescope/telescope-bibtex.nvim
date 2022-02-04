@@ -26,11 +26,11 @@ lua require"telescope".load_extension("bibtex")
 
 # Keybindings (Actions)
 
-| key     | Usage                     |
-|---------|---------------------------|
-| `<cr>`  | Insert the citation label |
-| `<c-e>` | Insert the citation entry |
-
+| key     | Usage                        |
+|---------|------------------------------|
+| `<cr>`  | Insert the citation label    |
+| `<c-e>` | Insert the citation entry    |
+| `<c-c>` | Insert a formatted citation  |
 
 # Configuration
 
@@ -67,6 +67,9 @@ require"telescope".setup {
       format = 'myCoolFormat',
       global_files = { 'path/to/my/bib/file.bib', 'path/to/my/bib/directory' },
       search_keys = { 'label', 'author', 'publisher' },
+      citation_format = '{{a}} ({{y}}), {{t}}.'
+      citation_trim_firstname = true
+      citation_max_auth = 2
     },
   }
 }

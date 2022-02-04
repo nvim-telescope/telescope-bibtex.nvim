@@ -1,4 +1,5 @@
 local has_telescope, telescope = pcall(require, 'telescope')
+local utils = require('telescope._extensions.bibtex.utils')
 
 if not has_telescope then
   error(
@@ -248,108 +249,18 @@ entry_append = function(prompt_bufnr)
   end
 end
 
-local function parse_entry(entry)
-  local parsed = {}
-  for _, line in pairs(entry) do
-    for field, val in string.gmatch(line, '(%w+)%s=%s*["{]*(.-)["}],?$') do
-      parsed[field] = val
-    end
-  end
-
-  return parsed
-end
-
-local function clean_titles(title)
-  if title ~= nil then
-    title = title:gsub('[%{|%}]', '')
-  end
-  return title
-end
-
-local function cite_template(parsed, template)
-  local citation = template
-  parsed.title = clean_titles(parsed.title)
-  parsed.booktitle = clean_titles(parsed.booktitle)
-  local substs = {
-    a = parsed.author,
-    t = parsed.title,
-    bt = parsed.booktitle,
-    y = parsed.year,
-    m = parsed.month,
-    d = parsed.date,
-    e = parsed.editor,
-    isbn = parsed.isbn,
-    l = parsed.location,
-    n = parsed.number,
-    p = parsed.pages,
-    P = parsed.pagetotal,
-    pu = parsed.publisher,
-    url = parsed.url,
-    vol = parsed.volume,
-  }
-  for k, v in pairs(substs) do
-    citation = citation:gsub('{{' .. k .. '}}', v)
-  end
-
-  return citation
-end
-
-local function split_str(s, delim)
-  local result = {}
-  for match in (s .. delim):gmatch('(.-)' .. delim) do
-    table.insert(result, match)
-  end
-  return result
-end
-
-local function trim_firstname(name)
-  local trimmed = name
-  local lastname
-  local firstnames
-
-  lastname, firstnames = name:match('(.*)%, (.*)')
-
-  local split_firstnames = split_str(firstnames, ' ')
-  local initials = ''
-  for i = 1, #split_firstnames, 1 do
-    initials = initials .. split_firstnames[i]:gsub('[%l|%.]', '') .. '.'
-    if i ~= #split_firstnames then
-      initials = initials .. ' '
-    end
-  end
-
-  trimmed = lastname .. ', ' .. initials
-  return trimmed
-end
-
-local function shorten_author(parsed, max_auth)
-  local shortened = parsed.author
-  local t = {}
-  local sep = ' and '
-  for auth in string.gmatch(parsed.author .. sep, '(.-)' .. sep) do
-    if citation_trim_firstname == true then
-      auth = trim_firstname(auth)
-    end
-    table.insert(t, auth)
-  end
-
-  if #t > max_auth then
-    shortened = table.concat(t, ', ', 1, max_auth) .. ', et al.'
-  elseif #t == 1 then
-    shortened = trim_firstname(parsed.author)
-  else
-    shortened = table.concat(t, ', ', 1, #t - 1) .. ' and ' .. t[#t]
-  end
-
-  return shortened
-end
-
+-- Parse bibtex entry and format the citation
 local function format_citation(entry, template)
-  local parsed = parse_entry(entry)
+  local parsed = utils.parse_entry(entry)
 
-  parsed.author = shorten_author(parsed, citation_max_auth)
+  local opts = {}
+  opts.trim_firstname = citation_trim_firstname
+  opts.max_auth = citation_max_auth
 
-  local citation = cite_template(parsed, template)
+  print(parsed.author)
+  parsed.author = utils.abbrev_authors(parsed, opts)
+
+  local citation = utils.format_template(parsed, template)
 
   return citation
 end
