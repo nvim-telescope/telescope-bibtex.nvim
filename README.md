@@ -77,12 +77,12 @@ require"telescope".setup {
       -- Define the search keys to use in the picker
       search_keys = { 'author', 'year', 'title' },
       -- Template for the formatted citation
-      citation_format = '{{author}} ({{year}}), {{title}}.'
+      citation_format = '{{author}} ({{year}}), {{title}}.',
       -- Only use initials for the authors first name
-      citation_trim_firstname = true
+      citation_trim_firstname = true,
       -- Max number of authors to write in the formatted citation
       -- following authors will be replaced by "et al."
-      citation_max_auth = 2
+      citation_max_auth = 2,
     },
   }
 }
@@ -154,6 +154,16 @@ The default format will produce a citation formatted like `Name, F. (YYYY),
 Title`. You can use any field of the bibtex entry to customize the
 `citation_format` parameter. If the fields are not present, they will be left
 empty when pasting the formatted citation.
+Besides the regular bibtex fileds, you can also use `{{label}}` for the entry
+label and `{{type}}` for the type of entry (`article`, `book`, `masterthesis`,
+etc).
+
+Example of `citation_format` for people using this feature for markdown
+references:
+
+```lua
+citation_format = "[[^@{{label}}]]: {{author}} ({{year}}), {{title}}.",
+```
 
 It is also possible to trim the first (and middle) names of the authors in order
 to keep only the initials (using `citation_trim_firstname`). The citation
