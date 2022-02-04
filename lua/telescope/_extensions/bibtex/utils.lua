@@ -38,29 +38,13 @@ end
 -- Format parsed entry according to template
 M.format_template = function(parsed, template)
   local citation = template
-  local substs = {
-    a = parsed.author,
-    t = parsed.title,
-    bt = parsed.booktitle,
-    y = parsed.year,
-    m = parsed.month,
-    d = parsed.date,
-    e = parsed.editor,
-    isbn = parsed.isbn,
-    l = parsed.location,
-    n = parsed.number,
-    p = parsed.pages,
-    P = parsed.pagetotal,
-    pu = parsed.publisher,
-    url = parsed.url,
-    vol = parsed.volume,
-    key = parsed.key,
-    type = parsed.type,
-  }
 
-  for k, v in pairs(substs) do
+  for k, v in pairs(parsed) do
     citation = citation:gsub('{{' .. k .. '}}', v)
   end
+
+  -- clean non-exsisting fields
+  citation = M.clean_str(citation, '{{.-}}')
 
   return citation
 end

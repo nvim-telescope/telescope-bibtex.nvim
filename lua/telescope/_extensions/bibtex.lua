@@ -31,7 +31,7 @@ local user_files = {}
 local files_initialized = false
 local files = {}
 local search_keys = { 'author', 'year', 'title' }
-local citation_format = '{{a}} ({{y}}), {{t}}.'
+local citation_format = '{{author}} ({{year}}), {{title}}.'
 local citation_trim_firstname = true
 local citation_max_auth = 2
 
@@ -289,7 +289,8 @@ return telescope.register_extension({
     end
     user_files = ext_config.global_files or {}
     search_keys = ext_config.search_keys or search_keys
-    citation_format = ext_config.citation_format or '{{a}} ({{y}}), {{t}}.'
+    citation_format = ext_config.citation_format
+      or '{{author}} ({{year}}), {{title}}.'
     citation_trim_firstname = ext_config.citation_trim_firstname or true
     citation_max_auth = ext_config.citation_max_auth or 2
   end,
