@@ -24,6 +24,10 @@ M.parse_entry = function(entry)
   --TODO: add type of entry and citekey
   local parsed = {}
   for _, line in pairs(entry) do
+    if line:sub(1, 1) == '@' then
+      parsed.type = string.match(line, '^@(.-){')
+      parsed.key = string.match(line, '^@.+{(.-),$')
+    end
     for field, val in string.gmatch(line, '(%w+)%s*=%s*["{]*(.-)["}],?$') do
       parsed[field] = M.clean_str(val, '[%{|%}]')
     end
