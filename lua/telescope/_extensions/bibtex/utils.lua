@@ -54,6 +54,8 @@ M.format_template = function(parsed, template)
     pu = parsed.publisher,
     url = parsed.url,
     vol = parsed.volume,
+    key = parsed.key,
+    type = parsed.type,
   }
 
   for k, v in pairs(substs) do
