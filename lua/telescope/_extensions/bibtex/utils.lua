@@ -30,7 +30,7 @@ M.parse_entry = function(entry)
   local parsed = {}
   for _, line in pairs(entry) do
     for field, val in string.gmatch(line, '(%w+)%s*=%s*["{]*(.-)["}],?$') do
-      parsed[field] = val
+      parsed[field] = M.clean_str(val, '[%{|%}]')
     end
   end
   return parsed
@@ -39,9 +39,6 @@ end
 -- Format parsed entry according to template
 M.format_template = function(parsed, template)
   local citation = template
-  for i = 1, #parsed do
-    parsed[i] = M.clean_str(parsed[i], '[%{|%}]')
-  end
   local substs = {
     a = parsed.author,
     t = parsed.title,
@@ -93,7 +90,7 @@ M.abbrev_authors = function(parsed, opts)
   local authors = {}
   local sep = ' and ' -- Authors are separated by ' and ' in bibtex entries
 
-  for auth in string.gmatch(parsed.author .. sep, '(.-)' .. sep) do
+  for _, auth in pairs(M.split_str(parsed.author, sep)) do
     local lastname, firstnames = auth:match('(.*)%, (.*)')
     if opts.trim_firstname == true then
       local initials = M.make_initials(firstnames, '.')

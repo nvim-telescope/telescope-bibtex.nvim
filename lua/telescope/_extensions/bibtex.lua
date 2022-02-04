@@ -257,12 +257,9 @@ local function format_citation(entry, template)
   opts.trim_firstname = citation_trim_firstname
   opts.max_auth = citation_max_auth
 
-  print(parsed.author)
   parsed.author = utils.abbrev_authors(parsed, opts)
 
-  local citation = utils.format_template(parsed, template)
-
-  return citation
+  return utils.format_template(parsed, template)
 end
 
 citation_append = function(prompt_bufnr)
