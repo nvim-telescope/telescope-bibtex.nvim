@@ -294,16 +294,31 @@ local function cite_template(parsed, template)
   return citation
 end
 
-local function trim_firstname(name)
-  local tmpauth = {}
-  local trimmed = name
-  for match in name:gmatch('(.-, %a)') do
-    table.insert(tmpauth, match)
+local function split_str(s, delim)
+  local result = {}
+  for match in (s .. delim):gmatch('(.-)' .. delim) do
+    table.insert(result, match)
   end
-  if tmpauth[1] ~= nil then
-    trimmed = tmpauth[1] .. '.'
+  return result
+end
+
+local function trim_firstname(name)
+  local trimmed = name
+  local lastname
+  local firstnames
+
+  lastname, firstnames = name:match('(.*)%, (.*)')
+
+  local split_firstnames = split_str(firstnames, ' ')
+  local initials = ''
+  for i = 1, #split_firstnames, 1 do
+    initials = initials .. split_firstnames[i]:gsub('[%l|%.]', '') .. '.'
+    if i ~= #split_firstnames then
+      initials = initials .. ' '
+    end
   end
 
+  trimmed = lastname .. ', ' .. initials
   return trimmed
 end
 
