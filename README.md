@@ -52,7 +52,7 @@ The entry picker comes with three different actions.
 | key     | Usage                        | Result |
 |---------|------------------------------|--------|
 | `<cr>`  | Insert the citation label    |@Newton1687|
-| `<c-e>` | Insert the citation entry    |@book{newton1687philosophiae,<br />&nbsp&nbsp title={Philosophiae naturalis principia mathematica},<br />&nbsp&nbsp  author={Newton, I.},<br />&nbsp&nbsp  year={1687},<br />&nbsp&nbsp   publisher={J. Societatis Regiae ac Typis J. Streater}<br />  }|
+| `<c-e>` | Insert the citation entry    |@book{newton1687philosophiae,<br />&nbsp;&nbsp; title={Philosophiae naturalis principia mathematica},<br />&nbsp;&nbsp;  author={Newton, I.},<br />&nbsp;&nbsp;  year={1687},<br />&nbsp;&nbsp;  publisher={J. Societatis Regiae ac Typis J. Streater}<br />  }|
 | `<c-c>` | Insert a formatted citation  | Newton, I. (1687), _Philosophiae naturalis principa mathematica_.|
 
 ## Configuration
