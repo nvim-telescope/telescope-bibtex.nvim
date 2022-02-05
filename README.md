@@ -33,13 +33,13 @@ use { "nvim-telescope/telescope-bibtex.nvim",
 ## Usage
 
 Before using telescope-bibtex, you must load it (this is already taken care of
-in the packer snipper here above).
+in the packer snippet above).
 
 ```vim
 :lua require"telescope".load_extension("bibtex")
 ```
 
-Then simply call the bibtex picker with
+Then simply call the bibtex picker with:
 
 ```vim
 :Telescope bibtex
@@ -57,7 +57,7 @@ The entry picker comes with three different actions.
 
 ## Configuration
 
-The default configuration for telescope-bibtex is
+The default configuration for telescope-bibtex is:
 
 ```lua
 require"telescope".setup {
@@ -118,9 +118,9 @@ require"telescope".setup {
 ```
 
 The `id` field is the identifier for your custom format (the one to re-use in
-the `format` option), while the `cite_marker` uses lua-pattern matching to apply
+the `format` option), while the `cite_marker` uses lua pattern matching to apply
 the format.
-In the example here-above, the citation label would then be `#label#`.
+In the example above, the citation label would then be `#label#`.
 
 If `format` is not defined, the plugin will try to find the right format based
 on the filetype. If there is no format for the filetype it will fall back to
@@ -154,7 +154,7 @@ The default format will produce a citation formatted like `Name, F. (YYYY),
 Title`. You can use any field of the bibtex entry to customize the
 `citation_format` parameter. If the fields are not present, they will be left
 empty when pasting the formatted citation.
-Besides the regular bibtex fileds, you can also use `{{label}}` for the entry
+Besides the regular bibtex fields, you can also use `{{label}}` for the entry
 label and `{{type}}` for the type of entry (`article`, `book`, `masterthesis`,
 etc).
 
