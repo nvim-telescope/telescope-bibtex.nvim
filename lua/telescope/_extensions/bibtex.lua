@@ -257,7 +257,9 @@ local function format_citation(entry, template)
   opts.trim_firstname = citation_trim_firstname
   opts.max_auth = citation_max_auth
 
-  parsed.author = utils.abbrev_authors(parsed, opts)
+  if parsed.author ~= nil then
+    parsed.author = utils.abbrev_authors(parsed, opts)
+  end
 
   return utils.format_template(parsed, template)
 end
