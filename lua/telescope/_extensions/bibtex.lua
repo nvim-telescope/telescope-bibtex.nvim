@@ -1,7 +1,10 @@
-local has_telescope, telescope = pcall(require, "telescope")
+local has_telescope, telescope = pcall(require, 'telescope')
+local utils = require('telescope._extensions.bibtex.utils')
 
 if not has_telescope then
-  error("This plugin requires telescope.nvim (https://github.com/nvim-telescope/telescope.nvim)")
+  error(
+    'This plugin requires telescope.nvim (https://github.com/nvim-telescope/telescope.nvim)'
+  )
 end
 
 local finders = require('telescope.finders')
@@ -17,10 +20,10 @@ local loop = vim.loop
 
 local depth = 1
 local formats = {}
-formats['tex'] = "\\cite{%s}"
-formats['md'] = "@%s"
-formats['markdown'] = "@%s"
-formats['plain'] = "%s"
+formats['tex'] = '\\cite{%s}'
+formats['md'] = '@%s'
+formats['markdown'] = '@%s'
+formats['plain'] = '%s'
 local fallback_format = 'plain'
 local use_auto_format = false
 local user_format = ''
@@ -28,6 +31,9 @@ local user_files = {}
 local files_initialized = false
 local files = {}
 local search_keys = { 'author', 'year', 'title' }
+local citation_format = '{{author}} ({{year}}), {{title}}.'
+local citation_trim_firstname = true
+local citation_max_auth = 2
 
 local function table_contains(table, element)
   for _, value in pairs(table) do
@@ -39,18 +45,22 @@ local function table_contains(table, element)
 end
 
 local function getBibFiles(dir)
-  scan.scan_dir(dir, { depth = depth, search_pattern = '.*%.bib', on_insert = function(file)
-    table.insert(files, {name = file, mtime = 0, entries = {}})
-  end })
+  scan.scan_dir(dir, {
+    depth = depth,
+    search_pattern = '.*%.bib',
+    on_insert = function(file)
+      table.insert(files, { name = file, mtime = 0, entries = {} })
+    end,
+  })
 end
 
 local function initFiles()
-  for _,file in pairs(user_files) do
+  for _, file in pairs(user_files) do
     local p = path:new(file)
     if p:is_dir() then
       getBibFiles(file)
     elseif p:is_file() then
-      table.insert(files, {name = file, mtime = 0, entries = {} })
+      table.insert(files, { name = file, mtime = 0, entries = {} })
     end
   end
   getBibFiles('.')
@@ -61,9 +71,11 @@ local function read_file(file)
   local contents = {}
   local search_relevants = {}
   local p = path:new(file)
-  if not p:exists() then return {} end
+  if not p:exists() then
+    return {}
+  end
   local data = p:read()
-  data = data:gsub("\r", "")
+  data = data:gsub('\r', '')
   local entries = {}
   local raw_entry = ''
   while true do
@@ -74,23 +86,25 @@ local function read_file(file)
     table.insert(entries, raw_entry)
     data = data:sub(#raw_entry + 2)
   end
-  for _,entry in pairs(entries) do
-    local label = entry:match("{%s*[^{},~#%\\]+,\n")
-    if (label) then
-      label = vim.trim(label:gsub("\n",""):sub(2, -2))
-      local content = vim.split(entry, "\n")
+  for _, entry in pairs(entries) do
+    local label = entry:match('{%s*[^{},~#%\\]+,\n')
+    if label then
+      label = vim.trim(label:gsub('\n', ''):sub(2, -2))
+      local content = vim.split(entry, '\n')
       table.insert(labels, label)
       contents[label] = content
       if table_contains(search_keys, [[label]]) then
         search_relevants[label]['label'] = label
       end
       search_relevants[label] = {}
-      for _,key in pairs(search_keys) do
+      for _, key in pairs(search_keys) do
         local match_base = '%f[%w]' .. key
-        local s = entry:match(match_base .. '%s*=%s*%b{}') or entry:match(match_base .. '%s*=%s*%b""') or entry:match(match_base .. '%s*=%s*%d+')
+        local s = entry:match(match_base .. '%s*=%s*%b{}')
+          or entry:match(match_base .. '%s*=%s*%b""')
+          or entry:match(match_base .. '%s*=%s*%d+')
         if s ~= nil then
           s = s:match('%b{}') or s:match('%b""') or s:match('%d+')
-          s = s:gsub('["{}\n]', ""):gsub('%s%s+', ' ')
+          s = s:gsub('["{}\n]', ''):gsub('%s%s+', ' ')
           search_relevants[label][key] = vim.trim(s)
         end
       end
@@ -120,18 +134,26 @@ local function setup_picker()
     files_initialized = true
   end
   local results = {}
-  for _,file in pairs(files) do
+  for _, file in pairs(files) do
     local mtime = loop.fs_stat(file.name).mtime.sec
     if mtime ~= file.mtime then
       file.entries = {}
       local result, content, search_relevants = read_file(file.name)
-      for _,entry in pairs(result) do
-	table.insert(results, { name = entry, content = content[entry], search_keys = search_relevants[entry] })
-	table.insert(file.entries, { name = entry, content = content[entry], search_keys = search_relevants[entry] })
+      for _, entry in pairs(result) do
+        table.insert(results, {
+          name = entry,
+          content = content[entry],
+          search_keys = search_relevants[entry],
+        })
+        table.insert(file.entries, {
+          name = entry,
+          content = content[entry],
+          search_keys = search_relevants[entry],
+        })
       end
       file.mtime = mtime
     else
-      for _,entry in pairs(file.entries) do
+      for _, entry in pairs(file.entries) do
         table.insert(results, entry)
       end
     end
@@ -155,12 +177,11 @@ end
 
 local function bibtex_picker(opts)
   opts = opts or {}
-  local mode = vim.api.nvim_get_mode().mode
   local format_string = parse_format_string(opts)
   local results = setup_picker()
   pickers.new(opts, {
     prompt_title = 'Bibtex References',
-    finder = finders.new_table {
+    finder = finders.new_table({
       results = results,
       entry_maker = function(line)
         local display_string, search_string = formatDisplay(line.search_keys)
@@ -176,17 +197,24 @@ local function bibtex_picker(opts)
           display = display_string,
           id = line,
           preview_command = function(entry, bufnr)
-            vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, results[entry.index].content)
+            vim.api.nvim_buf_set_lines(
+              bufnr,
+              0,
+              -1,
+              true,
+              results[entry.index].content
+            )
             putils.highlighter(bufnr, 'bib')
           end,
         }
-      end
-    },
+      end,
+    }),
     previewer = previewers.display_content.new(opts),
     sorter = conf.generic_sorter(opts),
     attach_mappings = function(_, map)
       actions.select_default:replace(key_append(format_string))
-      map("i", "<c-e>", entry_append)
+      map('i', '<c-e>', entry_append)
+      map('i', '<c-c>', citation_append)
       return true
     end,
   }):find()
@@ -194,13 +222,17 @@ end
 
 key_append = function(format_string)
   return function(prompt_bufnr)
-    local entry = string.format(format_string, action_state.get_selected_entry().id.name)
+    local mode = vim.api.nvim_get_mode().mode
+    local entry = string.format(
+      format_string,
+      action_state.get_selected_entry().id.name
+    )
     actions.close(prompt_bufnr)
-    if mode == "i" then
-      vim.api.nvim_put({entry}, "", false, true)
-      vim.api.nvim_feedkeys("a", "n", true)
+    if mode == 'i' then
+      vim.api.nvim_put({ entry }, '', false, true)
+      vim.api.nvim_feedkeys('a', 'n', true)
     else
-      vim.api.nvim_put({entry}, "", true, true)
+      vim.api.nvim_put({ entry }, '', true, true)
     end
   end
 end
@@ -208,15 +240,43 @@ end
 entry_append = function(prompt_bufnr)
   local entry = action_state.get_selected_entry().id.content
   actions.close(prompt_bufnr)
-  if mode == "i" then
-    vim.api.nvim_put(entry, "", false, true)
-    vim.api.nvim_feedkeys("a", "n", true)
+  local mode = vim.api.nvim_get_mode().mode
+  if mode == 'i' then
+    vim.api.nvim_put(entry, '', false, true)
+    vim.api.nvim_feedkeys('a', 'n', true)
   else
-    vim.api.nvim_put(entry, "", true, true)
+    vim.api.nvim_put(entry, '', true, true)
   end
 end
 
-return telescope.register_extension {
+-- Parse bibtex entry and format the citation
+local function format_citation(entry, template)
+  local parsed = utils.parse_entry(entry)
+
+  local opts = {}
+  opts.trim_firstname = citation_trim_firstname
+  opts.max_auth = citation_max_auth
+
+  if parsed.author ~= nil then
+    parsed.author = utils.abbrev_authors(parsed, opts)
+  end
+
+  return utils.format_template(parsed, template)
+end
+
+citation_append = function(prompt_bufnr)
+  local entry = action_state.get_selected_entry().id.content
+  actions.close(prompt_bufnr)
+  local citation = format_citation(entry, citation_format)
+  if mode == 'i' then
+    vim.api.nvim_put(citation, '', false, true)
+    vim.api.nvim_feedkeys('a', 'n', true)
+  else
+    vim.api.nvim_paste(citation, true, -1)
+  end
+end
+
+return telescope.register_extension({
   setup = function(ext_config)
     depth = ext_config.depth or depth
     local custom_formats = ext_config.custom_formats or {}
@@ -231,8 +291,12 @@ return telescope.register_extension {
     end
     user_files = ext_config.global_files or {}
     search_keys = ext_config.search_keys or search_keys
+    citation_format = ext_config.citation_format
+      or '{{author}} ({{year}}), {{title}}.'
+    citation_trim_firstname = ext_config.citation_trim_firstname or true
+    citation_max_auth = ext_config.citation_max_auth or 2
   end,
   exports = {
     bibtex = bibtex_picker,
   },
-}
+})
