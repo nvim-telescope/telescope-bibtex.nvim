@@ -83,9 +83,43 @@ require"telescope".setup {
       -- Max number of authors to write in the formatted citation
       -- following authors will be replaced by "et al."
       citation_max_auth = 2,
+      -- Use context awareness by default
+      context = false
     },
   }
 }
+```
+
+### Context Aware Bibliography File
+
+Two common contexts are included:
+
+| Filetype              | Context                                    |
+| --------------------- | ------------------------------------------ |
+| `pandoc`, `md`, `rmd` | `bibliography: file_path_with_ext`         |
+| `tex`                 | `\bibliography{relative_file_path_no_ext}` |
+
+_Note:_ Context awareness ignores the global bibliography files as well as the normal searching in the current directory.
+
+Context awareness can be enabled by default in the setup with `context`.
+
+```lua
+require"telescope".setup {
+  ...
+
+  extensions = {
+    bibtex = {
+      -- Use context awareness by default
+      context = true,
+    },
+  }
+}
+```
+
+To quickly change the context awareness, you can specify it via the options:
+
+```
+:Telescope bibtex context=false
 ```
 
 ### Label formats

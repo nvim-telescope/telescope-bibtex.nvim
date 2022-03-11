@@ -34,6 +34,7 @@ local search_keys = { 'author', 'year', 'title' }
 local citation_format = '{{author}} ({{year}}), {{title}}.'
 local citation_trim_firstname = true
 local citation_max_auth = 2
+local user_context = false
 
 local function table_contains(table, element)
   for _, value in pairs(table) do
@@ -44,26 +45,74 @@ local function table_contains(table, element)
   return false
 end
 
-local function getBibFiles(dir)
-  scan.scan_dir(dir, {
-    depth = depth,
-    search_pattern = '.*%.bib',
-    on_insert = function(file)
-      table.insert(files, { name = file, mtime = 0, entries = {} })
-    end,
-  })
+local function fileExists(file)
+  return vim.fn.empty(vim.fn.glob(file)) == 0
 end
 
-local function initFiles()
-  for _, file in pairs(user_files) do
-    local p = path:new(file)
-    if p:is_dir() then
-      getBibFiles(file)
-    elseif p:is_file() then
-      table.insert(files, { name = file, mtime = 0, entries = {} })
+local function contextualBib(regex, suffix, relative)
+  local path_sep = vim.loop.os_uname().sysname == 'Windows' and '\\' or '/'
+  if relative == nil then
+    relative = false
+  end
+  if suffix == nil then
+    suffix = ''
+  end
+  local base = vim.fn.expand('%:p:h')
+  local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+  for _, line in ipairs(lines) do
+    local location = string.match(line, regex)
+    if location then
+      location = location .. suffix
+      local file = nil
+      if not relative and fileExists(location) then
+        file = location
+      else
+        location = base .. path_sep .. location
+        if fileExists(location) then
+          file = location
+        end
+      end
+      if file ~= nil then
+        table.insert(files, { name = file, mtime = 0, entries = {} })
+      end
     end
   end
-  getBibFiles('.')
+end
+
+local function getBibFiles(dir, context)
+  if context then
+    if
+      vim.o.filetype == 'pandoc'
+      or vim.o.filetype == 'markdown'
+      or vim.o.filetype == 'rmd'
+    then
+      contextualBib('bibliography: (%g+)')
+    elseif vim.o.filetype == 'tex' then
+      contextualBib('\\bibliography{(%g+)}', '.bib', true)
+    end
+  else
+    scan.scan_dir(dir, {
+      depth = depth,
+      search_pattern = '.*%.bib',
+      on_insert = function(file)
+        table.insert(files, { name = file, mtime = 0, entries = {} })
+      end,
+    })
+  end
+end
+
+local function initFiles(context)
+  if not context then
+    for _, file in pairs(user_files) do
+      local p = path:new(file)
+      if p:is_dir() then
+        getBibFiles(file)
+      elseif p:is_file() then
+        table.insert(files, { name = file, mtime = 0, entries = {} })
+      end
+    end
+  end
+  getBibFiles('.', context)
 end
 
 local function read_file(file)
@@ -128,9 +177,13 @@ local function formatDisplay(entry)
   return vim.trim(display_string:sub(2)), search_string:sub(2)
 end
 
-local function setup_picker()
+local function setup_picker(context)
+  if context then
+    files = {}
+    files_initialized = false
+  end
   if not files_initialized then
-    initFiles()
+    initFiles(context)
     files_initialized = true
   end
   local results = {}
@@ -175,10 +228,21 @@ local function parse_format_string(opts)
   return format_string
 end
 
+local function parse_context(opts)
+  local context = nil
+  if opts.context ~= nil then
+    context = opts.context
+  else
+    context = user_context
+  end
+  return context
+end
+
 local function bibtex_picker(opts)
   opts = opts or {}
   local format_string = parse_format_string(opts)
-  local results = setup_picker()
+  local context = parse_context(opts)
+  local results = setup_picker(context)
   pickers.new(opts, {
     prompt_title = 'Bibtex References',
     finder = finders.new_table({
@@ -289,6 +353,7 @@ return telescope.register_extension({
       user_format = fallback_format
       use_auto_format = true
     end
+    user_context = ext_config.context or false
     user_files = ext_config.global_files or {}
     search_keys = ext_config.search_keys or search_keys
     citation_format = ext_config.citation_format
