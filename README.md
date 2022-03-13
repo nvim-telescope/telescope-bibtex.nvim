@@ -83,7 +83,7 @@ require"telescope".setup {
       -- Max number of authors to write in the formatted citation
       -- following authors will be replaced by "et al."
       citation_max_auth = 2,
-      -- Use context awareness by default
+      -- Context awareness disabled by default
       context = false
     },
   }
@@ -92,7 +92,7 @@ require"telescope".setup {
 
 ### Context Aware Bibliography File
 
-Two common contexts are included:
+If enabled, the plugin will look for context lines in your currently opened file that imply which bibliography file you want to use. See below for common examples based on filetype:
 
 | Filetype              | Context                                    |
 | --------------------- | ------------------------------------------ |
@@ -101,7 +101,7 @@ Two common contexts are included:
 
 _Note:_ Context awareness ignores the global bibliography files as well as the normal searching in the current directory.
 
-Context awareness can be enabled by default in the setup with `context`.
+Context awareness can be enabled in the setup with `context`.
 
 ```lua
 require"telescope".setup {
