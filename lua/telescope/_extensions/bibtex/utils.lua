@@ -101,19 +101,25 @@ M.fileExists = function(file)
   return vim.fn.empty(vim.fn.glob(file)) == 0
 end
 
+M.bufferLines = function()
+  return vim.api.nvim_buf_get_lines(0, 0, -1, false)
+end
 M.extendRelativePath = function(rel_path)
   local base = vim.fn.expand('%:p:h')
   local path_sep = vim.loop.os_uname().sysname == 'Windows' and '\\' or '/'
   return base .. path_sep .. rel_path
 end
 
+M.trimWhitespace = function(str)
+  return str:match('^%s*(.-)%s*$')
+end
 M.parseLatex = function()
   local files = {}
-  for _, line in ipairs(vim.api.nvim_buf_get_lines(0, 0, -1, false)) do
-    local bibs = string.match(line, '\\bibliography{(%g+)}')
-    local bibresource = string.match(line, '\\addbibresource{(%g+)}')
+  for _, line in ipairs(M.bufferLines()) do
+    local bibs = line:match('\\bibliography{(%g+)}')
+    local bibresource = line:match('\\addbibresource{(%g+)}')
     if bibs then
-      for bib in string.gmatch(bibs, '([^,]+)') do
+      for _, bib in ipairs(M.split_str(bibs, ',')) do
         bib = M.extendRelativePath(bib .. '.bib')
         if M.fileExists(bib) then
           table.insert(files, bib)
@@ -131,18 +137,38 @@ end
 
 M.parsePandoc = function()
   local files = {}
-  for _, line in ipairs(vim.api.nvim_buf_get_lines(0, 0, -1, false)) do
-    local bibs = string.match(line, 'bibliography: (%g+)')
-    if bibs then
-      local rel_bibs = M.extendRelativePath(bibs)
+  local bibStarted = false
+  local bibYaml = 'bibliography:'
+  for _, line in ipairs(M.bufferLines()) do
+    local bibs = {}
+    if bibStarted then
+      local bib = line:match('- (.+)')
+      if bib == nil then
+        bibStarted = false
+      else
+        table.insert(bibs, bib)
+      end
+    elseif line:find(bibYaml) then
+      local bib = line:match(bibYaml .. ' (.+)')
+      if bib then
+        for _, entry in
+          ipairs(M.split_str(bib:gsub('%[', ''):gsub('%]', ''), ','))
+        do
+          table.insert(bibs, M.trimWhitespace(entry))
+        end
+      end
+      bibStarted = true
+    end
+    for _, bib in ipairs(bibs) do
+      local rel_bibs = M.extendRelativePath(bib)
       local found = nil
-      if M.fileExists(bibs) then
-        found = bibs
+      if M.fileExists(bib) then
+        found = bib
       elseif M.fileExists(rel_bibs) then
         found = rel_bibs
       end
       if found ~= nil then
-        table.insert(files, bibs)
+        table.insert(files, bib)
       end
     end
   end
