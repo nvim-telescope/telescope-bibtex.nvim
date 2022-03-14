@@ -45,50 +45,20 @@ local function table_contains(table, element)
   return false
 end
 
-local function fileExists(file)
-  return vim.fn.empty(vim.fn.glob(file)) == 0
-end
-
-local function contextualBib(regex, suffix, relative)
-  local path_sep = vim.loop.os_uname().sysname == 'Windows' and '\\' or '/'
-  if relative == nil then
-    relative = false
-  end
-  if suffix == nil then
-    suffix = ''
-  end
-  local base = vim.fn.expand('%:p:h')
-  local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
-  for _, line in ipairs(lines) do
-    local location = string.match(line, regex)
-    if location then
-      location = location .. suffix
-      local file = nil
-      if not relative and fileExists(location) then
-        file = location
-      else
-        location = base .. path_sep .. location
-        if fileExists(location) then
-          file = location
-        end
-      end
-      if file ~= nil then
-        table.insert(files, { name = file, mtime = 0, entries = {} })
-      end
-    end
-  end
-end
-
 local function getBibFiles(dir, context)
   if context then
+    local found_files = {}
     if
       vim.o.filetype == 'pandoc'
       or vim.o.filetype == 'markdown'
       or vim.o.filetype == 'rmd'
     then
-      contextualBib('bibliography: (%g+)')
+      found_files = utils.parsePandoc()
     elseif vim.o.filetype == 'tex' then
-      contextualBib('\\bibliography{(%g+)}', '.bib', true)
+      found_files = utils.parseLatex()
+    end
+    for _, file in pairs(found_files) do
+      table.insert(files, { name = file, mtime = 0, entries = {} })
     end
   else
     scan.scan_dir(dir, {

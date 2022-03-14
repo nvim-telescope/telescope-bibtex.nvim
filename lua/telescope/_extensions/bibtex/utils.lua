@@ -97,6 +97,58 @@ M.abbrev_authors = function(parsed, opts)
   return shortened
 end
 
+M.fileExists = function(file)
+  return vim.fn.empty(vim.fn.glob(file)) == 0
+end
+
+M.extendRelativePath = function(rel_path)
+  local base = vim.fn.expand('%:p:h')
+  local path_sep = vim.loop.os_uname().sysname == 'Windows' and '\\' or '/'
+  return base .. path_sep .. rel_path
+end
+
+M.parseLatex = function()
+  local files = {}
+  for _, line in ipairs(vim.api.nvim_buf_get_lines(0, 0, -1, false)) do
+    local bibs = string.match(line, '\\bibliography{(%g+)}')
+    local bibresource = string.match(line, '\\addbibresource{(%g+)}')
+    if bibs then
+      for bib in string.gmatch(bibs, '([^,]+)') do
+        bib = M.extendRelativePath(bib .. '.bib')
+        if M.fileExists(bib) then
+          table.insert(files, bib)
+        end
+      end
+    elseif bibresource then
+      bibresource = M.extendRelativePath(bibresource)
+      if M.fileExists(bibresource) then
+        table.insert(files, bibresource)
+      end
+    end
+  end
+  return files
+end
+
+M.parsePandoc = function()
+  local files = {}
+  for _, line in ipairs(vim.api.nvim_buf_get_lines(0, 0, -1, false)) do
+    local bibs = string.match(line, 'bibliography: (%g+)')
+    if bibs then
+      local rel_bibs = M.extendRelativePath(bibs)
+      local found = nil
+      if M.fileExists(bibs) then
+        found = bibs
+      elseif M.fileExists(rel_bibs) then
+        found = rel_bibs
+      end
+      if found ~= nil then
+        table.insert(files, bibs)
+      end
+    end
+  end
+  return files
+end
+
 -- Replace escaped accents by proper UTF-8 char
 M.clean_accents = function(str)
   -- Mapping table from Zotero translator

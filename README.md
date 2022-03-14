@@ -94,10 +94,10 @@ require"telescope".setup {
 
 If enabled, the plugin will look for context lines in your currently opened file that imply which bibliography file you want to use. See below for common examples based on filetype:
 
-| Filetype              | Context                                    |
-| --------------------- | ------------------------------------------ |
-| `pandoc`, `md`, `rmd` | `bibliography: file_path_with_ext`         |
-| `tex`                 | `\bibliography{relative_file_path_no_ext}` |
+| Filetype              | Context                                                                                     |
+| --------------------- | ------------------------------------------------------------------------------------------- |
+| `pandoc`, `md`, `rmd` | `bibliography: file_path_with_ext`                                                          |
+| `tex`                 | `\bibliography{relative_file_path_no_ext}` or `\addbibresource{relative_file_ath_with_ext}` |
 
 _Note:_ Context awareness ignores the global bibliography files as well as the normal searching in the current directory.
 
