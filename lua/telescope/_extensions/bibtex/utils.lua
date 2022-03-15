@@ -104,6 +104,7 @@ end
 M.bufferLines = function()
   return vim.api.nvim_buf_get_lines(0, 0, -1, false)
 end
+
 M.extendRelativePath = function(rel_path)
   local base = vim.fn.expand('%:p:h')
   local path_sep = vim.loop.os_uname().sysname == 'Windows' and '\\' or '/'
@@ -113,11 +114,12 @@ end
 M.trimWhitespace = function(str)
   return str:match('^%s*(.-)%s*$')
 end
+
 M.parseLatex = function()
   local files = {}
   for _, line in ipairs(M.bufferLines()) do
-    local bibs = line:match('\\bibliography{(%g+)}')
-    local bibresource = line:match('\\addbibresource{(%g+)}')
+    local bibs = line:match('^[^%%]*\\bibliography{(%g+)}')
+    local bibresource = line:match('^[^%%]*\\addbibresource{(%g+)}')
     if bibs then
       for _, bib in ipairs(M.split_str(bibs, ',')) do
         bib = M.extendRelativePath(bib .. '.bib')
