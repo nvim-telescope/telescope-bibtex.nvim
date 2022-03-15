@@ -50,13 +50,9 @@ end
 local function getContextBibFiles()
   local found_files = {}
   context_files = {}
-  if
-    vim.o.filetype == 'pandoc'
-    or vim.o.filetype == 'markdown'
-    or vim.o.filetype == 'rmd'
-  then
+  if utils.isPandocFile() then
     found_files = utils.parsePandoc()
-  elseif vim.o.filetype == 'tex' then
+  elseif utils.isLatexFile() then
     found_files = utils.parseLatex()
   end
   for _, file in pairs(found_files) do

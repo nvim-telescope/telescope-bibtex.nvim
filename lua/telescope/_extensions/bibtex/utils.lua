@@ -115,6 +115,10 @@ M.trimWhitespace = function(str)
   return str:match('^%s*(.-)%s*$')
 end
 
+M.isLatexFile = function()
+  return vim.o.filetype == 'tex'
+end
+
 M.parseLatex = function()
   local files = {}
   for _, line in ipairs(M.bufferLines()) do
@@ -135,6 +139,12 @@ M.parseLatex = function()
     end
   end
   return files
+end
+
+M.isPandocFile = function()
+  return vim.o.filetype == 'pandoc'
+    or vim.o.filetype == 'markdown'
+    or vim.o.filetype == 'rmd'
 end
 
 M.parsePandoc = function()
