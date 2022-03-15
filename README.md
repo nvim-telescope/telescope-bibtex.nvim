@@ -85,6 +85,9 @@ require"telescope".setup {
       citation_max_auth = 2,
       -- Context awareness disabled by default
       context = false
+      -- Fallback to global/directory .bib files if context not found
+      -- This setting has no affect if context = false
+      context_fallback = true
     },
   }
 }
@@ -103,14 +106,19 @@ _Note:_ Context awareness ignores the global bibliography files as well as the n
 
 Context awareness can be enabled in the setup with `context`.
 
+If a context is not found in the current file, telescope-bibtex can fallback to the non-contextual behavior with `context_fallback`
+
 ```lua
 require"telescope".setup {
   ...
 
   extensions = {
     bibtex = {
-      -- Use context awareness by default
+      -- Use context awareness
       context = true,
+      -- Use non-contextual behavior if no context found
+      -- This setting has no affect if context = false
+      context_fallback = true,
     },
   }
 }
