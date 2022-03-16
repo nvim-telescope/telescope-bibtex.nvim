@@ -86,7 +86,7 @@ require"telescope".setup {
       -- Context awareness disabled by default
       context = false
       -- Fallback to global/directory .bib files if context not found
-      -- This setting has no affect if context = false
+      -- This setting has no effect if context = false
       context_fallback = true
     },
   }
@@ -117,7 +117,7 @@ require"telescope".setup {
       -- Use context awareness
       context = true,
       -- Use non-contextual behavior if no context found
-      -- This setting has no affect if context = false
+      -- This setting has no effect if context = false
       context_fallback = true,
     },
   }
