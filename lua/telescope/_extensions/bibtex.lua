@@ -30,10 +30,13 @@ local user_format = ''
 local user_files = {}
 local files_initialized = false
 local files = {}
+local context_files = {}
 local search_keys = { 'author', 'year', 'title' }
 local citation_format = '{{author}} ({{year}}), {{title}}.'
 local citation_trim_firstname = true
 local citation_max_auth = 2
+local user_context = false
+local user_context_fallback = true
 
 local function table_contains(table, element)
   for _, value in pairs(table) do
@@ -42,6 +45,19 @@ local function table_contains(table, element)
     end
   end
   return false
+end
+
+local function getContextBibFiles()
+  local found_files = {}
+  context_files = {}
+  if utils.isPandocFile() then
+    found_files = utils.parsePandoc()
+  elseif utils.isLatexFile() then
+    found_files = utils.parseLatex()
+  end
+  for _, file in pairs(found_files) do
+    table.insert(context_files, { name = file, mtime = 0, entries = {} })
+  end
 end
 
 local function getBibFiles(dir)
@@ -128,13 +144,20 @@ local function formatDisplay(entry)
   return vim.trim(display_string:sub(2)), search_string:sub(2)
 end
 
-local function setup_picker()
+local function setup_picker(context, context_fallback)
+  if context then
+    getContextBibFiles()
+  end
   if not files_initialized then
     initFiles()
     files_initialized = true
   end
   local results = {}
-  for _, file in pairs(files) do
+  local current_files = files
+  if context and (not context_fallback or next(context_files)) then
+    current_files = context_files
+  end
+  for _, file in pairs(current_files) do
     local mtime = loop.fs_stat(file.name).mtime.sec
     if mtime ~= file.mtime then
       file.entries = {}
@@ -175,10 +198,32 @@ local function parse_format_string(opts)
   return format_string
 end
 
+local function parse_context(opts)
+  local context = nil
+  if opts.context ~= nil then
+    context = opts.context
+  else
+    context = user_context
+  end
+  return context
+end
+
+local function parse_context_fallback(opts)
+  local context_fallback = nil
+  if opts.context_fallback ~= nil then
+    context_fallback = opts.context_fallback
+  else
+    context_fallback = user_context_fallback
+  end
+  return context_fallback
+end
+
 local function bibtex_picker(opts)
   opts = opts or {}
   local format_string = parse_format_string(opts)
-  local results = setup_picker()
+  local context = parse_context(opts)
+  local context_fallback = parse_context_fallback(opts)
+  local results = setup_picker(context, context_fallback)
   pickers.new(opts, {
     prompt_title = 'Bibtex References',
     finder = finders.new_table({
@@ -288,6 +333,10 @@ return telescope.register_extension({
     else
       user_format = fallback_format
       use_auto_format = true
+    end
+    user_context = ext_config.context or false
+    if ext_config.context_fallback ~= nil then
+      user_context_fallback = ext_config.context_fallback
     end
     user_files = ext_config.global_files or {}
     search_keys = ext_config.search_keys or search_keys

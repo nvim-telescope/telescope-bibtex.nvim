@@ -83,9 +83,51 @@ require"telescope".setup {
       -- Max number of authors to write in the formatted citation
       -- following authors will be replaced by "et al."
       citation_max_auth = 2,
+      -- Context awareness disabled by default
+      context = false
+      -- Fallback to global/directory .bib files if context not found
+      -- This setting has no effect if context = false
+      context_fallback = true
     },
   }
 }
+```
+
+### Context Aware Bibliography File
+
+If enabled, the plugin will look for context lines in your currently opened file that imply which bibliography file you want to use. See below for common examples based on filetype:
+
+| Filetype              | Context                                                                                      |
+| --------------------- | -------------------------------------------------------------------------------------------- |
+| `pandoc`, `md`, `rmd` | `bibliography: file_path_with_ext`                                                           |
+| `tex`                 | `\bibliography{relative_file_path_no_ext}` or `\addbibresource{relative_file_path_with_ext}` |
+
+_Note:_ Context awareness ignores the global bibliography files as well as the normal searching in the current directory.
+
+Context awareness can be enabled in the setup with `context`.
+
+If a context is not found in the current file, telescope-bibtex can fallback to the non-contextual behavior with `context_fallback`
+
+```lua
+require"telescope".setup {
+  ...
+
+  extensions = {
+    bibtex = {
+      -- Use context awareness
+      context = true,
+      -- Use non-contextual behavior if no context found
+      -- This setting has no effect if context = false
+      context_fallback = true,
+    },
+  }
+}
+```
+
+To quickly change the context awareness, you can specify it via the options:
+
+```
+:Telescope bibtex context=false
 ```
 
 ### Label formats
