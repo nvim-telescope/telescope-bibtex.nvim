@@ -144,6 +144,7 @@ end
 M.isPandocFile = function()
   return vim.o.filetype == 'pandoc'
     or vim.o.filetype == 'markdown'
+    or vim.o.filetype == 'md'
     or vim.o.filetype == 'rmd'
 end
 
