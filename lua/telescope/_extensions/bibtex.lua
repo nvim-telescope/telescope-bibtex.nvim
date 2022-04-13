@@ -116,7 +116,8 @@ local function read_file(file)
       end
       search_relevants[label] = {}
       for _, key in pairs(search_keys) do
-        local match_base = '%f[%w]' .. key
+        local key_pattern = utils.construct_case_insensitive_pattern(key)
+        local match_base = '%f[%w]' .. key_pattern
         local s = entry:match(match_base .. '%s*=%s*%b{}')
           or entry:match(match_base .. '%s*=%s*%b""')
           or entry:match(match_base .. '%s*=%s*%d+')
