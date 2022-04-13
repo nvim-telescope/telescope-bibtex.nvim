@@ -1,5 +1,17 @@
 local M = {}
 
+M.construct_case_insensitive_pattern = function(key)
+  local pattern = ""
+  for char in key:gmatch('.') do
+    if char:match('%a') then
+      pattern = pattern .. '[' .. string.lower(char) .. string.upper(char) .. ']'
+    else
+      pattern = pattern .. char
+    end
+  end
+  return pattern
+end
+
 -- Split a string according to a delimiter
 M.split_str = function(str, delim)
   local result = {}
