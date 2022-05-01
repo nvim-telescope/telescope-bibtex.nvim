@@ -1,10 +1,14 @@
 local M = {}
 
 M.construct_case_insensitive_pattern = function(key)
-  local pattern = ""
+  local pattern = ''
   for char in key:gmatch('.') do
     if char:match('%a') then
-      pattern = pattern .. '[' .. string.lower(char) .. string.upper(char) .. ']'
+      pattern = pattern
+        .. '['
+        .. string.lower(char)
+        .. string.upper(char)
+        .. ']'
     else
       pattern = pattern .. char
     end
@@ -678,6 +682,14 @@ M.clean_accents = function(str)
     str = str:gsub(k, v)
   end
   return str
+end
+
+M.parse_wrap = function(opts, user_wrap)
+  local wrap = user_wrap
+  if opts.wrap ~= nil then
+    wrap = opts.wrap
+  end
+  return wrap
 end
 
 return M
