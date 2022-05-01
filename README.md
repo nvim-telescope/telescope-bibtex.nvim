@@ -84,10 +84,12 @@ require"telescope".setup {
       -- following authors will be replaced by "et al."
       citation_max_auth = 2,
       -- Context awareness disabled by default
-      context = false
+      context = false,
       -- Fallback to global/directory .bib files if context not found
       -- This setting has no effect if context = false
-      context_fallback = true
+      context_fallback = true,
+      -- Wrapping in the preview window is disabled by default
+      wrap = false,
     },
   }
 }

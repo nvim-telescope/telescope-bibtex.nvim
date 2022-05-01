@@ -19,6 +19,7 @@ local putils = require('telescope.previewers.utils')
 local loop = vim.loop
 
 local depth = 1
+local wrap = false
 local formats = {}
 formats['tex'] = '\\cite{%s}'
 formats['md'] = '@%s'
@@ -244,20 +245,26 @@ local function bibtex_picker(opts)
           ordinal = search_string,
           display = display_string,
           id = line,
-          preview_command = function(entry, bufnr)
-            vim.api.nvim_buf_set_lines(
-              bufnr,
-              0,
-              -1,
-              true,
-              results[entry.index].content
-            )
-            putils.highlighter(bufnr, 'bib')
-          end,
         }
       end,
     }),
-    previewer = previewers.display_content.new(opts),
+    previewer = previewers.new_buffer_previewer({
+      define_preview = function(self, entry, status)
+        vim.api.nvim_buf_set_lines(
+          self.state.bufnr,
+          0,
+          -1,
+          true,
+          results[entry.index].content
+        )
+        putils.highlighter(self.state.bufnr, 'bib')
+        vim.api.nvim_win_set_option(
+          status.preview_win,
+          'wrap',
+          utils.parse_wrap(opts, wrap)
+        )
+      end,
+    }),
     sorter = conf.generic_sorter(opts),
     attach_mappings = function(_, map)
       actions.select_default:replace(key_append(format_string))
@@ -347,6 +354,7 @@ return telescope.register_extension({
       or '{{author}} ({{year}}), {{title}}.'
     citation_trim_firstname = ext_config.citation_trim_firstname or true
     citation_max_auth = ext_config.citation_max_auth or 2
+    wrap = ext_config.wrap or wrap
   end,
   exports = {
     bibtex = bibtex_picker,
