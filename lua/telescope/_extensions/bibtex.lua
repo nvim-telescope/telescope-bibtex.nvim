@@ -348,7 +348,11 @@ return telescope.register_extension({
     if ext_config.context_fallback ~= nil then
       user_context_fallback = ext_config.context_fallback
     end
-    user_files = ext_config.global_files or {}
+    if ext_config.global_files ~= nil then
+      for _, file in pairs(ext_config.global_files) do
+        table.insert(user_files, vim.fn.expand(file))
+      end
+    end
     search_keys = ext_config.search_keys or search_keys
     citation_format = ext_config.citation_format
       or '{{author}} ({{year}}), {{title}}.'
