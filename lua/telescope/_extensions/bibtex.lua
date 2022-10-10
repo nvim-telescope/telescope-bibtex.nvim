@@ -59,7 +59,9 @@ local function getContextBibFiles()
     found_files = utils.parseLatex()
   end
   for _, file in pairs(found_files) do
-    table.insert(context_files, { name = file, mtime = 0, entries = {} })
+    if not utils.file_present(context_files, file) then
+      table.insert(context_files, { name = file, mtime = 0, entries = {} })
+    end
   end
 end
 
@@ -68,7 +70,10 @@ local function getBibFiles(dir)
     depth = depth,
     search_pattern = '.*%.bib',
     on_insert = function(file)
-      table.insert(files, { name = file, mtime = 0, entries = {} })
+      local p = path:new(file):absolute()
+      if not utils.file_present(files, p) then
+        table.insert(files, { name = p , mtime = 0, entries = {} })
+      end
     end,
   })
 end
@@ -79,7 +84,9 @@ local function initFiles()
     if p:is_dir() then
       getBibFiles(file)
     elseif p:is_file() then
-      table.insert(files, { name = file, mtime = 0, entries = {} })
+      if not utils.file_present(files, file) then
+        table.insert(files, { name = file, mtime = 0, entries = {} })
+      end
     end
   end
   getBibFiles('.')

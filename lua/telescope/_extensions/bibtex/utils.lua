@@ -1,5 +1,14 @@
 local M = {}
 
+M.file_present = function(table, filename)
+  for _, file in pairs(table) do
+    if file.name == filename then
+      return true
+    end
+  end
+  return false
+end
+
 M.construct_case_insensitive_pattern = function(key)
   local pattern = ''
   for char in key:gmatch('.') do
