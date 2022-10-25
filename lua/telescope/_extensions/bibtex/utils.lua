@@ -95,7 +95,7 @@ M.abbrev_authors = function(parsed, opts)
     if firstnames == nil then
       firstnames, lastname = auth:match('(.*)% (.*)')
     end
-    if opts.trim_firstname == true then
+    if opts.trim_firstname == true and firstnames ~= nil then
       local initials = M.make_initials(firstnames, '.')
       auth = lastname .. ', ' .. initials
     end
