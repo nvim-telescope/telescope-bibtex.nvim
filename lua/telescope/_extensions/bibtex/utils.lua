@@ -174,6 +174,7 @@ M.isPandocFile = function()
     or vim.o.filetype == 'markdown'
     or vim.o.filetype == 'md'
     or vim.o.filetype == 'rmd'
+    or vim.o.filetype == 'quarto'
 end
 
 M.parsePandoc = function()
