@@ -236,60 +236,60 @@ local function bibtex_picker(opts)
   local context = parse_context(opts)
   local context_fallback = parse_context_fallback(opts)
   local results = setup_picker(context, context_fallback)
-  pickers.new(opts, {
-    prompt_title = 'Bibtex References',
-    finder = finders.new_table({
-      results = results,
-      entry_maker = function(line)
-        local display_string, search_string = formatDisplay(line.search_keys)
-        if display_string == '' then
-          display_string = line.name
-        end
-        if search_string == '' then
-          search_string = line.name
-        end
-        return {
-          value = search_string,
-          ordinal = search_string,
-          display = display_string,
-          id = line,
-        }
+  pickers
+    .new(opts, {
+      prompt_title = 'Bibtex References',
+      finder = finders.new_table({
+        results = results,
+        entry_maker = function(line)
+          local display_string, search_string = formatDisplay(line.search_keys)
+          if display_string == '' then
+            display_string = line.name
+          end
+          if search_string == '' then
+            search_string = line.name
+          end
+          return {
+            value = search_string,
+            ordinal = search_string,
+            display = display_string,
+            id = line,
+          }
+        end,
+      }),
+      previewer = previewers.new_buffer_previewer({
+        define_preview = function(self, entry, status)
+          vim.api.nvim_buf_set_lines(
+            self.state.bufnr,
+            0,
+            -1,
+            true,
+            results[entry.index].content
+          )
+          putils.highlighter(self.state.bufnr, 'bib')
+          vim.api.nvim_win_set_option(
+            status.preview_win,
+            'wrap',
+            utils.parse_wrap(opts, wrap)
+          )
+        end,
+      }),
+      sorter = conf.generic_sorter(opts),
+      attach_mappings = function(_, map)
+        actions.select_default:replace(key_append(format_string))
+        map('i', '<c-e>', entry_append)
+        map('i', '<c-c>', citation_append)
+        return true
       end,
-    }),
-    previewer = previewers.new_buffer_previewer({
-      define_preview = function(self, entry, status)
-        vim.api.nvim_buf_set_lines(
-          self.state.bufnr,
-          0,
-          -1,
-          true,
-          results[entry.index].content
-        )
-        putils.highlighter(self.state.bufnr, 'bib')
-        vim.api.nvim_win_set_option(
-          status.preview_win,
-          'wrap',
-          utils.parse_wrap(opts, wrap)
-        )
-      end,
-    }),
-    sorter = conf.generic_sorter(opts),
-    attach_mappings = function(_, map)
-      actions.select_default:replace(key_append(format_string))
-      map('i', '<c-e>', entry_append)
-      map('i', '<c-c>', citation_append)
-      return true
-    end,
-  }):find()
+    })
+    :find()
 end
 
 key_append = function(format_string)
   return function(prompt_bufnr)
     local mode = vim.api.nvim_get_mode().mode
-    local entry = string.format(
-      format_string,
-      action_state.get_selected_entry().id.name
-    )
+    local entry =
+      string.format(format_string, action_state.get_selected_entry().id.name)
     actions.close(prompt_bufnr)
     if mode == 'i' then
       vim.api.nvim_put({ entry }, '', false, true)
@@ -352,10 +352,8 @@ return telescope.register_extension({
       user_format = fallback_format
       use_auto_format = true
     end
-    user_context = ext_config.context or false
-    if ext_config.context_fallback ~= nil then
-      user_context_fallback = ext_config.context_fallback
-    end
+    user_context = ext_config.context or user_context
+    user_context_fallback = ext_config.context_fallback or user_context_fallback
     if ext_config.global_files ~= nil then
       for _, file in pairs(ext_config.global_files) do
         table.insert(user_files, vim.fn.expand(file))
@@ -364,8 +362,9 @@ return telescope.register_extension({
     search_keys = ext_config.search_keys or search_keys
     citation_format = ext_config.citation_format
       or '{{author}} ({{year}}), {{title}}.'
-    citation_trim_firstname = ext_config.citation_trim_firstname or true
-    citation_max_auth = ext_config.citation_max_auth or 2
+    citation_trim_firstname = ext_config.citation_trim_firstname
+      or citation_trim_firstname
+    citation_max_auth = ext_config.citation_max_auth or citation_max_auth
     wrap = ext_config.wrap or wrap
   end,
   exports = {
