@@ -120,10 +120,10 @@ local function read_file(file)
       local content = vim.split(entry, '\n')
       table.insert(labels, label)
       contents[label] = content
+      search_relevants[label] = {}
       if table_contains(search_keys, [[label]]) then
         search_relevants[label]['label'] = label
       end
-      search_relevants[label] = {}
       for _, key in pairs(search_keys) do
         local key_pattern = utils.construct_case_insensitive_pattern(key)
         local match_base = '%f[%w]' .. key_pattern
