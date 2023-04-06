@@ -225,7 +225,7 @@ al._ locution. Just specify the number of authors you want to keep in full with
 
 ### Custom Mappings
 
-To define a custom mapping you need to define one of the [actions](#keybindings-(actions)) provided by the plugin.
+To define a custom mapping you need to define one of the [actions](#keybindings-actions) provided by the plugin.
 You can pass options to the action to further customize it.
 One use-case for this could be to define different latex `\cite{}` mappings or other formats:
 
