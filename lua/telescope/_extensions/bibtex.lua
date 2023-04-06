@@ -1,5 +1,6 @@
 local has_telescope, telescope = pcall(require, 'telescope')
 local utils = require('telescope._extensions.bibtex.utils')
+local bibtex_actions = require('telescope-bibtex.actions')
 
 if not has_telescope then
   error(
@@ -10,7 +11,6 @@ end
 local finders = require('telescope.finders')
 local pickers = require('telescope.pickers')
 local actions = require('telescope.actions')
-local action_state = require('telescope.actions.state')
 local previewers = require('telescope.previewers')
 local conf = require('telescope.config').values
 local scan = require('plenary.scandir')
@@ -41,6 +41,12 @@ local citation_trim_firstname = true
 local citation_max_auth = 2
 local user_context = false
 local user_context_fallback = true
+local keymaps = {
+  i = {
+    ["<C-e>"] = bibtex_actions.entry_append,
+    ["<C-c>"] = bibtex_actions.citation_append(citation_format),
+  }
+}
 
 local function table_contains(table, element)
   for _, value in pairs(table) do
@@ -276,44 +282,20 @@ local function bibtex_picker(opts)
       }),
       sorter = conf.generic_sorter(opts),
       attach_mappings = function(_, map)
-        actions.select_default:replace(key_append(format_string))
-        map('i', '<c-e>', entry_append)
-        map('i', '<c-c>', citation_append)
+        actions.select_default:replace(bibtex_actions.key_append(format_string))
+        for mode, mappings in pairs(keymaps) do
+          for key, action in pairs(mappings) do
+            map(mode, key, action)
+          end
+        end
         return true
       end,
     })
     :find()
 end
 
-key_append = function(format_string)
-  return function(prompt_bufnr)
-    local mode = vim.api.nvim_get_mode().mode
-    local entry =
-      string.format(format_string, action_state.get_selected_entry().id.name)
-    actions.close(prompt_bufnr)
-    if mode == 'i' then
-      vim.api.nvim_put({ entry }, '', false, true)
-      vim.api.nvim_feedkeys('a', 'n', true)
-    else
-      vim.api.nvim_put({ entry }, '', true, true)
-    end
-  end
-end
-
-entry_append = function(prompt_bufnr)
-  local entry = action_state.get_selected_entry().id.content
-  actions.close(prompt_bufnr)
-  local mode = vim.api.nvim_get_mode().mode
-  if mode == 'i' then
-    vim.api.nvim_put(entry, '', false, true)
-    vim.api.nvim_feedkeys('a', 'n', true)
-  else
-    vim.api.nvim_put(entry, '', true, true)
-  end
-end
-
 -- Parse bibtex entry and format the citation
-local function format_citation(entry, template)
+function format_citation(entry, template)
   local parsed = utils.parse_entry(entry)
 
   local opts = {}
@@ -325,18 +307,6 @@ local function format_citation(entry, template)
   end
 
   return utils.format_template(parsed, template)
-end
-
-citation_append = function(prompt_bufnr)
-  local entry = action_state.get_selected_entry().id.content
-  actions.close(prompt_bufnr)
-  local citation = format_citation(entry, citation_format)
-  if mode == 'i' then
-    vim.api.nvim_put(citation, '', false, true)
-    vim.api.nvim_feedkeys('a', 'n', true)
-  else
-    vim.api.nvim_paste(citation, true, -1)
-  end
 end
 
 return telescope.register_extension({
@@ -366,6 +336,7 @@ return telescope.register_extension({
       or citation_trim_firstname
     citation_max_auth = ext_config.citation_max_auth or citation_max_auth
     wrap = ext_config.wrap or wrap
+    keymaps = vim.tbl_extend("force", keymaps, ext_config.mappings or {})
   end,
   exports = {
     bibtex = bibtex_picker,
