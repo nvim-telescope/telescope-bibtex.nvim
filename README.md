@@ -180,7 +180,7 @@ To quickly change the format, you can specify it via the options:
 
 You can configure telescope-bibtex to be able to search by other fields than
 `author`, `year` and `title`. If you want to first search by `publisher`, then
-`author` and finally `label`, just use
+`author` and finally `label` (the citation key), just use
 
 ```lua
 search_keys = { 'publisher','author', 'label' }
