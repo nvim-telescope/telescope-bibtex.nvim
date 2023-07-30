@@ -279,6 +279,7 @@ local function bibtex_picker(opts)
         actions.select_default:replace(key_append(format_string))
         map('i', '<c-e>', entry_append)
         map('i', '<c-c>', citation_append)
+        map('i', '<c-f>', field_append)
         return true
       end,
     })
@@ -311,6 +312,59 @@ entry_append = function(prompt_bufnr)
     vim.api.nvim_put(entry, '', true, true)
   end
 end
+
+local function get_bibkeys(parsed_entry)
+  local bibkeys={}
+  for key,_ in pairs(parsed_entry) do
+    table.insert(bibkeys, key)
+  end
+  return bibkeys
+end
+
+field_append = function(prompt_bufnr)
+  local bib_entry = action_state.get_selected_entry().id.content
+  actions.close(prompt_bufnr)
+
+  local parsed = utils.parse_entry(bib_entry)
+  pickers.new(opts, {
+    prompt_title = "Bibtex fields",
+    sorter = conf.generic_sorter(opts),
+    finder = finders.new_table {
+      results = get_bibkeys(parsed),
+    },
+    previewer = previewers.new_buffer_previewer({
+        define_preview = function(self, entry, status)
+          vim.api.nvim_buf_set_lines(
+            self.state.bufnr,
+            0,
+            -1,
+            true,
+            {parsed[entry[1]]}
+          )
+          vim.api.nvim_win_set_option(
+            status.preview_win,
+            'wrap',
+            true
+          )
+        end,
+      }),
+    attach_mappings = function(prompt_bufnr)
+      actions.select_default:replace(function()
+        actions.close(prompt_bufnr)
+        local selection = action_state.get_selected_entry()
+        local mode = vim.api.nvim_get_mode().mode
+        if mode == 'i' then
+          vim.api.nvim_put({parsed[selection[1]]}, '', false, true)
+          vim.api.nvim_feedkeys('a', 'n', true)
+        else
+          vim.api.nvim_put({parsed[selection[1]]}, '', true, true)
+        end
+      end)
+      return true
+    end,
+  }):find()
+end
+
 
 -- Parse bibtex entry and format the citation
 local function format_citation(entry, template)
