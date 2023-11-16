@@ -24,6 +24,7 @@ local formats = {}
 formats['tex'] = '\\cite{%s}'
 formats['md'] = '@%s'
 formats['markdown'] = '@%s'
+formats['typst'] = '@%s'
 formats['rmd'] = '@%s'
 formats['quarto'] = '@%s'
 formats['pandoc'] = '@%s'
