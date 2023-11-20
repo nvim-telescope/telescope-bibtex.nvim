@@ -206,7 +206,9 @@ end
 
 local function parse_format_string(opts)
   local format_string = nil
-  if opts.format ~= nil then
+  if opts.format_string ~= nil then
+    format_string = opts.format_string
+  elseif opts.format ~= nil then
     format_string = formats[opts.format]
   elseif use_auto_format then
     format_string = formats[vim.bo.filetype]
