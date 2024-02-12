@@ -95,6 +95,7 @@ local function initFiles()
 end
 
 local function read_file(file)
+  print("Processing file: " .. file)
   local labels = {}
   local contents = {}
   local search_relevants = {}
@@ -104,17 +105,12 @@ local function read_file(file)
   end
   local data = p:read()
   data = data:gsub('\r', '')
-  local entries = {}
-  local raw_entry = ''
+  local entry = ''
   while true do
-    raw_entry = data:match('@%w*%s*%b{}')
-    if raw_entry == nil then
+    entry = data:match('@%w*%s*%b{}')
+    if entry == nil then
       break
     end
-    table.insert(entries, raw_entry)
-    data = data:sub(#raw_entry + 2)
-  end
-  for _, entry in pairs(entries) do
     local label = entry:match('{%s*[^{},~#%\\]+,\n')
     if label then
       label = vim.trim(label:gsub('\n', ''):sub(2, -2))
@@ -145,6 +141,7 @@ local function read_file(file)
         end
       end
     end
+    data = data:sub(#entry + 2)
   end
   return labels, contents, search_relevants
 end
