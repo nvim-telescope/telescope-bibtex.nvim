@@ -95,6 +95,14 @@ require"telescope".setup {
       context_fallback = true,
       -- Wrapping in the preview window is disabled by default
       wrap = false,
+      -- user defined mappings
+      mappings = {
+          i = {
+            ["<CR>"] = bibtex_actions.key_append('%s'), -- format is determined by filetype if the user has not set it explictly
+            ["<C-e>"] = bibtex_actions.entry_append,
+            ["<C-c>"] = bibtex_actions.citation_append('{{author}} ({{year}}), {{title}}.'),
+          }
+      },
     },
   }
 }
@@ -219,6 +227,24 @@ to keep only the initials (using `citation_trim_firstname`). The citation
 formatter is also able to replace large numbers of authors by the common _et
 al._ locution. Just specify the number of authors you want to keep in full with
 `citation_max_auth`.
+
+### Custom Mappings
+
+To define a custom mapping you need to define one of the [actions](#keybindings-actions) provided by the plugin.
+You can pass options to the action to further customize it.
+One use-case for this could be to define different latex `\cite{}` mappings or other formats:
+
+```lua
+local bibtex_actions = require('telescope-bibtex.actions')
+
+mappings = {
+  i = {
+    ["<C-a>"] = bibtex_actions.key_append([[\citep{%s}]]), -- a string with %s to be replaced by the citation key
+    ["<C-b>"] = bibtex_actions.citation_append('[^@{{label}}]: {{author}}, {{title}}, {{journal}}, {{year}}, vol. {{volume}}, no. {{number}}, p. {{pages}}.'), -- a string with keys in {{}} to be replaced
+    ["<C-c>"] = bibtex_actions.entry_append(), -- entry_append does not take any arguments
+  }
+}
+```
 
 ## Troubleshooting
 
