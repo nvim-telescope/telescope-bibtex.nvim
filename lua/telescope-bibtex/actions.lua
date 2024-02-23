@@ -1,4 +1,5 @@
 local actions = require('telescope.actions')
+local utils = require('telescope-bibtex.utils')
 local action_state = require('telescope.actions.state')
 
 return {
@@ -29,11 +30,11 @@ return {
     end
   end,
 
-  citation_append = function(citation_format)
+  citation_append = function(citation_format, opts)
     return function(prompt_bufnr)
       local entry = action_state.get_selected_entry().id.content
       actions.close(prompt_bufnr)
-      local citation = format_citation(entry, citation_format)
+      local citation = utils.format_citation(entry, citation_format, opts)
       local mode = vim.api.nvim_get_mode().mode
       if mode == 'i' then
         vim.api.nvim_put({citation}, '', false, true)

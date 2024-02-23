@@ -1,6 +1,7 @@
 local has_telescope, telescope = pcall(require, 'telescope')
-local utils = require('telescope._extensions.bibtex.utils')
+--local utils = require('telescope._extensions.bibtex.utils')
 local bibtex_actions = require('telescope-bibtex.actions')
+local utils = require('telescope-bibtex.utils')
 
 if not has_telescope then
   error(
@@ -11,7 +12,6 @@ end
 local finders = require('telescope.finders')
 local pickers = require('telescope.pickers')
 local actions = require('telescope.actions')
-local action_state = require('telescope.actions.state')
 local previewers = require('telescope.previewers')
 local conf = require('telescope.config').values
 local scan = require('plenary.scandir')
@@ -111,17 +111,12 @@ local function read_file(file)
   end
   local data = p:read()
   data = data:gsub('\r', '')
-  local entries = {}
-  local raw_entry = ''
+  local entry = ''
   while true do
     entry = data:match('@%w*%s*%b{}')
     if entry == nil then
       break
     end
-    table.insert(entries, raw_entry)
-    data = data:sub(#raw_entry + 2)
-  end
-  for _, entry in pairs(entries) do
     local label = entry:match('{%s*[^{},~#%\\]+,\n')
     if label then
       label = vim.trim(label:gsub('\n', ''):sub(2, -2))
@@ -148,7 +143,7 @@ local function read_file(file)
         end
         if s ~= nil then
           s = s:gsub('["{}\n]', ''):gsub('%s%s+', ' ')
-          search_relevants[label][key] = vim.trim(s)
+          search_relevants[label][string.lower(key)] = vim.trim(s)
         end
       end
     end
@@ -306,20 +301,6 @@ local function bibtex_picker(opts)
     :find()
 end
 
--- Parse bibtex entry and format the citation
-local function format_citation(entry, template)
-  local parsed = utils.parse_entry(entry)
-
-  local opts = {}
-  opts.trim_firstname = citation_trim_firstname
-  opts.max_auth = citation_max_auth
-
-  if parsed.author ~= nil then
-    parsed.author = utils.abbrev_authors(parsed, opts)
-  end
-
-  return utils.format_template(parsed, template)
-end
 
 return telescope.register_extension({
   setup = function(ext_config)
