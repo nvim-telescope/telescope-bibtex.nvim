@@ -1,5 +1,7 @@
 local M = {}
 
+
+
 M.file_present = function(table, filename)
   for _, file in pairs(table) do
     if file.name == filename then
@@ -53,7 +55,7 @@ M.parse_entry = function(entry)
       parsed.label = string.match(line, '^@.+{(.-),$')
     end
     for field, val in string.gmatch(line, '(%w+)%s*=%s*["{]*(.-)["}],?$') do
-      parsed[field] = M.clean_str(val, '[%{|%}]')
+      parsed[string.lower(field)] = M.clean_str(val, '[%{|%}]')
     end
   end
   return parsed
@@ -395,7 +397,7 @@ M.clean_accents = function(str)
     ['\\~A'] = 'Ã', -- LATIN CAPITAL LETTER A WITH TILDE
     ['\\"A'] = 'Ä', -- LATIN CAPITAL LETTER A WITH DIAERESIS
     ['\\r A'] = 'Å', -- LATIN CAPITAL LETTER A WITH RING ABOVE
-    ['\\AA'] = 'Æ', -- LATIN CAPITAL LETTER A WITH RING ABOVE
+    ['\\AA'] = 'Å', -- LATIN CAPITAL LETTER A WITH RING ABOVE
     ['\\c C'] = 'Ç', -- LATIN CAPITAL LETTER C WITH CEDILLA
     ['\\`E'] = 'È', -- LATIN CAPITAL LETTER E WITH GRAVE
     ["\\'E"] = 'É', -- LATIN CAPITAL LETTER E WITH ACUTE
@@ -703,6 +705,18 @@ M.parse_wrap = function(opts, user_wrap)
     wrap = opts.wrap
   end
   return wrap
+end
+
+
+-- Parse bibtex entry and format the citation
+M.format_citation = function(entry, template, opts)
+  local parsed = M.parse_entry(entry)
+
+  if parsed.author ~= nil then
+    parsed.author = M.abbrev_authors(parsed, opts)
+  end
+
+  return M.format_template(parsed, template)
 end
 
 return M
