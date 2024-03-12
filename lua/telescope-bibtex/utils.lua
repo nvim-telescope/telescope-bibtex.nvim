@@ -719,4 +719,13 @@ M.format_citation = function(entry, template, opts)
   return M.format_template(parsed, template)
 end
 
+-- Make a dict of parsed bibtex fields
+M.get_bibkeys = function(parsed_entry)
+  local bibkeys={}
+  for key,_ in pairs(parsed_entry) do
+    table.insert(bibkeys, key)
+  end
+  return bibkeys
+end
+
 return M
