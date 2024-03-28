@@ -47,6 +47,7 @@ local keymaps = {
   i = {
     ["<C-e>"] = bibtex_actions.entry_append,
     ["<C-c>"] = bibtex_actions.citation_append(citation_format),
+    ["<C-f>"] = bibtex_actions.field_append(citation_format),
   }
 }
 
